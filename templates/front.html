@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+  {% for p in posts %}
+    <div class="jumbotron">{{ p.render() | safe }}</div>
+    <br><br>
+  {% endfor %}
+
+{% endblock %}

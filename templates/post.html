@@ -1,0 +1,24 @@
+<div class="post">
+  <div class="post-heading">
+    <h2>
+      <a href="/blog/{{p.key().id()}}">{{p.subject}}</a>
+      
+    </h2>
+    Posted by
+    <div class="label label-warning">
+      {{p.author}}
+    </div>
+    <h4>
+      <div class="label label-info">
+        {{p.created.strftime("%b %d, %Y")}}
+      </div>
+    </h4>
+  </div>
+  <hr>
+
+  <div class="post-content">
+    {{p._render_text | safe}}
+  </div>
+
+  
+</div>
