@@ -141,12 +141,13 @@ def comment_key(name = 'default'):
 
 #Object for Post database
 class Post(db.Model):
-    title = subject = db.StringProperty(required = True)
+    subject = db.StringProperty(required = True)
     content = db.TextProperty(required = True)
     author = db.StringProperty(required = True)
     created = db.DateTimeProperty(auto_now_add = True)
     last_modified = db.DateTimeProperty(auto_now = True)
     #+datetime.timedelta(hours=8)
+    selectedTutor = db.StringProperty()
 
     @classmethod
     def by_id(cls, uid):
@@ -174,19 +175,20 @@ class Post(db.Model):
         comments = Comment.all().filter('parent_post =', str(self.key().id())).order('-created')
         return render_str("owner-single-post.html", p = self, comments = comments, respondents = respondents)
 
-    def exchangeContact(self):
-        firstConnection = Connection(title = self.title, otherUser = self.selectedTutor, otherUserEmail = User.by_name(self.selectedTutor).email , parent_user = str(self.user.key().id()))
+        #change subject to title later
+    def exchangeContact(self, user):
+        firstConnection = Connection(postingTitle = self.subject, otherUser = self.selectedTutor, otherUserEmail = User.by_name(self.selectedTutor).email, parent_user = str(user.key().id()))
         firstConnection.put()
-        secondConnection = Connection(title = self.title, otherUser = str(self.user.key().id()), otherUserEmail = self.user.email, parent_user = str(User.by_name(self.selectedTutor)))
+        secondConnection = Connection(postingTitle = self.subject, otherUser = str(user.key().id()), otherUserEmail = user.email, parent_user = str(User.by_name(self.selectedTutor)))
         secondConnection.put()
-        self.response.out.write("This will send you to a page saying that you exchanged contact information with such and such user. Maybe this should redirect to your connections page")
+        #self.response.out.write("This will send you to a page saying that you exchanged contact information with such and such user. Maybe this should redirect to your connections page")
 
 
-    def selectTutor(self, selectedTutor):
-        selectedTutor = selectedTutor
-        self.exchangeContact()
+    def selectTutor(self, selectedTutor, user):
+        self.selectedTutor = selectedTutor
+        self.exchangeContact(user)
 
-    selectedTutor = db.StringProperty()
+    
 
 
 
@@ -308,9 +310,10 @@ class PostPage(BlogHandler):
         #this should be post_id.owner
         if self.user.name == Post.by_id(int(post_id)).author:
             self.render("ownerPermalink.html", post = post)
+        else:
 
 
-        self.render("permalink.html", post = post)
+            self.render("permalink.html", post = post)
 
     def post(self, post_id):
         if not self.user:
@@ -321,6 +324,10 @@ class PostPage(BlogHandler):
 
         if isSelect:
             selected = self.request.get('selectList')
+            thisAFH = Post.by_id(int(post_id))
+            thisAFH.selectTutor(selected, self.user)
+            print selected
+            self.redirect('/blog/?')
 
         if isApply:
             respondent = self.user.name #make sure this is getting the responder, not owner
@@ -369,7 +376,6 @@ class NewPost(BlogHandler):
             self.redirect("/login")
 
     def post(self):
-        print self.user.name
         if not self.user:
             self.redirect('/blog')
 
