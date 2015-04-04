@@ -182,9 +182,9 @@ class AFH (db.Model):
             #that value is passed to selectTutor
 
     def exchangeContact(self):
-        firstConnection = Connection(title = self.title, otherUser = self.selectedTutor, parent_user = str(self.user.key().id()))
+        firstConnection = Connection(title = self.title, otherUser = self.selectedTutor, otherUserEmail = User.by_name(self.selectedTutor).email , parent_user = str(self.user.key().id()))
         firstConnection.put()
-        secondConnection = Connection(title = self.title, otherUser = str(self.user.key().id()), parent_user = str(User.by_name(self.selectedTutor)))
+        secondConnection = Connection(title = self.title, otherUser = str(self.user.key().id()), otherUserEmail = self.user.email, parent_user = str(User.by_name(self.selectedTutor)))
         secondConnection.put()
         self.response.out.write("This will send you to a page saying that you exchanged contact information with such and such user. Maybe this should redirect to your connections page")
 
@@ -235,6 +235,7 @@ class Comment(db.Model):
 
 class Connection(db.Model):
     otherUser = db.StringProperty(required = True)
+    otherUserEmail = db.StringProperty()
     postingTitle = db.StringProperty(required = True)
     created = db.DateTimeProperty(auto_now_add = True)
     parent_user = db.StringProperty(required = True)
@@ -278,23 +279,44 @@ class PostPage(BlogHandler):
     def post(self, post_id):
         if not self.user:
             self.redirect('/blog')
+        
+        is_Apply = self.request.get('apply')
 
-        content = self.request.get('content').replace('\n', '<br>')
+        if is_Apply:
+            respondent = self.user.name #make sure this is getting the responder, not owner
+            toBeAdded = Respondent(respondent = respondent, parentAFH = str(post_id))
+            toBeAdded.put()
+            self.response.out.write("Congratulations %s" % self.user.name)
+        
+        else:
+            content = self.request.get('content').replace('\n', '<br>')
 
-        key = db.Key.from_path('Post', int(post_id), parent=blog_key())
-        post = db.get(key)
+            key = db.Key.from_path('Post', int(post_id), parent=blog_key())
+            post = db.get(key)
 
-        if not post:
-            self.error(404)
-            return
+            if not post:
+                self.error(404)
+                return
 
-        if content:
-            created = datetime.now() - timedelta(hours=5)
-            comment = Comment(parent = comment_key(), created = created, content = content, author = self.user.name, parent_post = post_id)
-            comment.put()
+            if content:
+                created = datetime.now() - timedelta(hours=5)
+                comment = Comment(parent = comment_key(), created = created, content = content, author = self.user.name, parent_post = post_id)
+                comment.put()
 
-        #else:
-        self.redirect('/blog/%s' % post_id)
+            #else:
+            self.redirect('/blog/%s' % post_id)
+
+class Applied(BlogHandler):
+    def post(self):
+        if not self.user:
+            self.redirect('/signup')
+        else:
+            post_id = self.request.get('postID')
+            respondent = self.user.name #make sure this is getting the responder, not owner
+            toBeAdded = Respondent(respondent = respondent, parentAFH = str(post_id))
+            toBeAdded.put()
+            self.response.out.write("Congratulations %s" % self.user.name)
+
 
 
 
@@ -422,6 +444,7 @@ app = webapp2.WSGIApplication([('/', MainPage),
                                ('/blog/?(?:.json)?', BlogFront),
                                ('/blog/([0-9]+)(?:.json)?', PostPage),
                                ('/blog/newpost', NewPost),
+                               ('/blog/applied', Applied),
                                ('/signup', Register),
                                ('/login', Login),
                                ('/logout', Logout),
