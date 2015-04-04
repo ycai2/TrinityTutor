@@ -181,6 +181,8 @@ class Post(db.Model):
         firstConnection.put()
         secondConnection = Connection(postingTitle = self.subject, otherUser = str(user.key().id()), otherUserEmail = user.email, parent_user = str(User.by_name(self.selectedTutor)))
         secondConnection.put()
+        print user
+        time.sleep(1)
         #self.response.out.write("This will send you to a page saying that you exchanged contact information with such and such user. Maybe this should redirect to your connections page")
 
 
@@ -326,8 +328,14 @@ class PostPage(BlogHandler):
             selected = self.request.get('selectList')
             thisAFH = Post.by_id(int(post_id))
             thisAFH.selectTutor(selected, self.user)
-            print selected
-            self.redirect('/blog/?')
+            print self
+            time.sleep(1)
+            print self
+            self.redirect('/connections')
+            time.sleep(1)
+            print "testing asdasd a"
+            print self
+
 
         if isApply:
             respondent = self.user.name #make sure this is getting the responder, not owner
@@ -335,7 +343,6 @@ class PostPage(BlogHandler):
             toBeAdded.put()
             self.redirect('/blog/%s' % post_id)
 
-        
         else:
             content = self.request.get('content').replace('\n', '<br>')
 
