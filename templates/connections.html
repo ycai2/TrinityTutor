@@ -14,7 +14,7 @@
   <div class="panel panel-default">
     <div class="panel-heading"> {{i.otherUser}} {{i.created.strftime("%H:%M:%S, %b %d, %Y")}}</div>
     <div class="panel-body">
-      {{i.AFH | safe}}
+      {{i.postingTitle | safe}}
     </div>
   </div>
   {% endfor %}

@@ -158,7 +158,30 @@ class Post(db.Model):
         comments = Comment.all().filter('parent_post =', str(self.key().id())).order('-created')
         return render_str("single-post.html", p = self, comments = comments)
 
-    
+
+class AFH (db.Model):
+    title = db.StringProperty(required = True)
+    subject = db.StringProperty(required = True)
+    difficulty = db.StringProperty(required = True)
+    owner = db.StringProperty(required = True)
+    selectedTutor = db.StringProperty()
+    wage = db.IntegerProperty(required = True)
+    length = db.StringProperty(required = True)
+    description = db.StringProperty(required = True)
+    dateCreated = db.DateTimeProperty(auto_now_add = True)
+
+    def exchangeContact(self):
+        firstConnection = Connection(title = self.title, otherUser = self.selectedTutor, parent_user = str(self.user.key().id()))
+        firstConnection.put()
+        secondConnection = Connection(title = self.title, otherUser = str(self.user.key().id()), parent_user = str(User.by_name(self.selectedTutor)))
+        secondConnection.put()
+        self.response.out.write("This will send you to a page saying that you exchanged contact information with such and such user. Maybe this should redirect to your connections page")
+
+
+    def selectTutor(self, selectedTutor):
+        selectedTutor = selectedTutor
+        self.exchangeContact()
+
 
 #Front page
 class BlogFront(BlogHandler):
@@ -177,7 +200,7 @@ class Comment(db.Model):
 
 class Connection(db.Model):
     otherUser = db.StringProperty(required = True)
-    AFH = db.StringProperty(required = True)
+    postingTitle = db.StringProperty(required = True)
     created = db.DateTimeProperty(auto_now_add = True)
     parent_user = db.StringProperty(required = True)
 
@@ -190,7 +213,8 @@ class ConnectionsPage(BlogHandler):
     def get(self, user_id):
         if self.user.key().id() == int(user_id):
             connections = Connection.all().filter('parent_user =', str(user_id)).order('-created')
-            self.render_str("connections.html", p = self, connections = connections)
+            self.response.out.write("error for now because connections are empty")
+            #self.render_str("connections.html", p = self, connections = connections)
         else:
             self.redirect('/blog/?')
 
