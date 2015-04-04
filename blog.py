@@ -181,8 +181,6 @@ class Post(db.Model):
         firstConnection.put()
         secondConnection = Connection(postingTitle = self.subject, otherUser = str(user.key().id()), otherUserEmail = user.email, parent_user = str(User.by_name(self.selectedTutor)))
         secondConnection.put()
-        print user
-        time.sleep(1)
         #self.response.out.write("This will send you to a page saying that you exchanged contact information with such and such user. Maybe this should redirect to your connections page")
 
 
@@ -286,6 +284,7 @@ class ConnectionsPage(BlogHandler):
 
     def get(self, user_id):
         if self.user.key().id() == int(user_id):
+            #print User.ser_id
             connections = Connection.all().filter('parent_user =', str(user_id)).order('-created')
             #self.response.out.write("error for now because connections are empty %s %s" % (user_id, self.user.name))
             self.render_str("connections.html", p = self, connections = connections)
@@ -328,16 +327,9 @@ class PostPage(BlogHandler):
             selected = self.request.get('selectList')
             thisAFH = Post.by_id(int(post_id))
             thisAFH.selectTutor(selected, self.user)
-            print self
-            time.sleep(1)
-            print self
             self.redirect('/connections')
-            time.sleep(1)
-            print "testing asdasd a"
-            print self
 
-
-        if isApply:
+        elif isApply:
             respondent = self.user.name #make sure this is getting the responder, not owner
             toBeAdded = Respondent(respondent = respondent, parentAFH = str(post_id))
             toBeAdded.put()
