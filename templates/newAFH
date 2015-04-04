@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block navbar %}
+  <li><a href="/blog">Home</a></li>
+  <li class="active"><a href="/blog/newpost">New Post</a></li>
+{% endblock %}
+
+{% block content %}
+
+  <h2>New Post</h2>
+
+    <form method="post" class="jumbotron">
+      <label>
+        <div>Subject</div>
+        <input type="text" class="form-control" name="subject" value="{{subject}}">
+      </label>
+
+      <div>
+        <b>Blog</b>
+        
+        </div>
+      <textarea class="form-control" name="content" rows="10" placeholder="(HTML formatting available)">{{content}}</textarea>
+      
+
+      <div class="error">{{error}}</div>
+      <br><br>
+      <input type="submit" class="btn btn-primary">
+    </form>
+{% endblock %}

@@ -159,6 +159,8 @@ class Post(db.Model):
         return render_str("single-post.html", p = self, comments = comments)
 
 
+
+
 class AFH (db.Model):
     title = db.StringProperty(required = True)
     subject = db.StringProperty(required = True)
@@ -169,6 +171,15 @@ class AFH (db.Model):
     length = db.StringProperty(required = True)
     description = db.StringProperty(required = True)
     dateCreated = db.DateTimeProperty(auto_now_add = True)
+
+    #def render(self):
+        #if self.user.name == owner:
+            #render the page so that you have the option to select the best respondent
+            #add a radial button by each name. Make it a form so when you submit, selectTutor is called with value
+        #else:
+            #render normal page where you can add your name to respondees
+            #adding your name first identifies the username that is doing the adding.
+            #that value is passed to selectTutor
 
     def exchangeContact(self):
         firstConnection = Connection(title = self.title, otherUser = self.selectedTutor, parent_user = str(self.user.key().id()))
@@ -181,6 +192,24 @@ class AFH (db.Model):
     def selectTutor(self, selectedTutor):
         selectedTutor = selectedTutor
         self.exchangeContact()
+
+    def addRespondent(self):
+        respondent = self.user.name #make sure this is getting the responder, not owner
+        toBeAdded = Respondent(respondent = respondent, parentAFH = str(self.key().id()))
+        toBeAdded.put()
+
+    def displayRespondents(self):
+        respondents = Respondent.all().filter('parentAFH =', str(self.key().id()).order('-created'))
+        return respondents
+
+
+class Respondent(db.Model):
+    respondent = db.StringProperty(required = True)
+    parentAFH = db.StringProperty()
+    created = db.DateTimeProperty(auto_now_add = True)
+
+
+
 
 
 #Front page
@@ -198,6 +227,12 @@ class Comment(db.Model):
     created = db.DateTimeProperty(auto_now_add = True)
     parent_post = db.StringProperty(required = True)
 
+
+
+
+
+
+
 class Connection(db.Model):
     otherUser = db.StringProperty(required = True)
     postingTitle = db.StringProperty(required = True)
@@ -206,17 +241,20 @@ class Connection(db.Model):
 
 class ConnectionRedirect(BlogHandler):
     def get(self):
-        self.redirect('connections/%s' % str(self.user.key().id()))
+        if self.user:
+            self.redirect('connections/%s' % str(self.user.key().id()))
+        else:
+            self.redirect('/login')
 
 class ConnectionsPage(BlogHandler):
 
     def get(self, user_id):
         if self.user.key().id() == int(user_id):
             connections = Connection.all().filter('parent_user =', str(user_id)).order('-created')
-            self.response.out.write("error for now because connections are empty")
+            self.response.out.write("error for now because connections are empty %s %s" % (user_id, self.user.name))
             #self.render_str("connections.html", p = self, connections = connections)
         else:
-            self.redirect('/blog/?')
+            self.redirect('/blog/?') #this is when you're accessing someone else's data
 
 
 
