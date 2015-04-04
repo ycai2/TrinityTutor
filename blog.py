@@ -175,6 +175,29 @@ class Comment(db.Model):
     created = db.DateTimeProperty(auto_now_add = True)
     parent_post = db.StringProperty(required = True)
 
+class Connection(db.Model):
+    otherUser = db.StringProperty(required = True)
+    AFH = db.StringProperty(required = True)
+    created = db.DateTimeProperty(auto_now_add = True)
+    parent_user = db.StringProperty(required = True)
+
+class ConnectionRedirect(BlogHandler):
+    def get(self):
+        self.redirect('connections/%s' % str(self.user.key().id()))
+
+class ConnectionsPage(BlogHandler):
+
+    def get(self, user_id):
+        if self.user.key().id() == int(user_id):
+            connections = Connection.all().filter('parent_user =', str(user_id)).order('-created')
+            self.render_str("connections.html", p = self, connections = connections)
+        else:
+            self.redirect('/blog/?')
+
+
+
+
+
 
 
 
@@ -340,6 +363,8 @@ app = webapp2.WSGIApplication([('/', MainPage),
                                ('/signup', Register),
                                ('/login', Login),
                                ('/logout', Logout),
-                               ('/welcome', Welcome)
+                               ('/welcome', Welcome),
+                               ('/connections', ConnectionRedirect),
+                               ('/connections/([0-9]+)(?:.json)?', ConnectionsPage)
                                ],
                               debug=True)

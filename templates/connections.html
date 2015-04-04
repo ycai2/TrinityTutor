@@ -1,0 +1,22 @@
+<div class="post">
+  
+  <div class="post-heading">
+    <h2>
+      Connections of {{p.user.name}}
+    </h2>
+  </div>
+  <hr>
+
+  <hr>
+
+  {% for i in connections %}
+
+  <div class="panel panel-default">
+    <div class="panel-heading"> {{i.otherUser}} {{i.created.strftime("%H:%M:%S, %b %d, %Y")}}</div>
+    <div class="panel-body">
+      {{i.AFH | safe}}
+    </div>
+  </div>
+  {% endfor %}
+
+</div>

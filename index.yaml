@@ -16,6 +16,12 @@ indexes:
   - name: created
     direction: desc
 
+- kind: Connection
+  properties:
+  - name: parent_user
+  - name: created
+    direction: desc
+
 - kind: Post
   ancestor: yes
   properties:
