@@ -27,29 +27,39 @@
   <hr>
 </div>
 
+<div> LIST OF RESPONDENTS </div>
+<select>
+{% for i in respondents %}
+  <option value="{{i.respondent}}"> {{i.respondent}} </option>
+{% endfor %}
+</select>
+
+<br><br>
+<hr><hr>
 
 
-  {% for i in comments %}
+<div> LIST OF COMMENTS </div>
+{% for i in comments %}
 
-  <div class="panel panel-default">
-    <div class="panel-heading"> {{i.author}} {{i.created.strftime("%H:%M:%S, %b %d, %Y")}}</div>
-    <div class="panel-body">
-      {{i.content | safe}}
-    </div>
+<div class="panel panel-default">
+  <div class="panel-heading"> {{i.author}} {{i.created.strftime("%H:%M:%S, %b %d, %Y")}}</div>
+  <div class="panel-body">
+    {{i.content | safe}}
   </div>
-  {% endfor %}
+</div>
+{% endfor %}
 
-  <form method="post" class="jumbotron">
-    <input type="submit" name="apply" class="btn btn-primary" value="Apply for this position now"></input>
-    <br><br>
+<form method="post" class="jumbotron">
+  <input type="submit" name="apply" class="btn btn-primary" value="Apply for this position now"></input>
+  <br><br>
 
-    <div>
-      <b>Comment</b>
-    </div>
-    <textarea class="form-control" name="content" rows="7" placeholder="(HTML formatting available)">{{content}}</textarea>
-    <div class="error">{{error}}</div>
-    <br><br>
-    <input type="submit" class="btn btn-primary">
-  </form>
+  <div>
+    <b>Comment</b>
+  </div>
+  <textarea class="form-control" name="content" rows="7" placeholder="(HTML formatting available)">{{content}}</textarea>
+  <div class="error">{{error}}</div>
+  <br><br>
+  <input type="submit" class="btn btn-primary">
+</form>
 
 </div>

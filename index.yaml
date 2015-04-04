@@ -33,3 +33,9 @@ indexes:
   properties:
   - name: date
     direction: desc
+
+- kind: Respondent
+  properties:
+  - name: parentAFH
+  - name: created
+    direction: desc

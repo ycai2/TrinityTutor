@@ -141,45 +141,38 @@ def comment_key(name = 'default'):
 
 #Object for Post database
 class Post(db.Model):
-    subject = db.StringProperty(required = True)
+    title = subject = db.StringProperty(required = True)
     content = db.TextProperty(required = True)
     author = db.StringProperty(required = True)
     created = db.DateTimeProperty(auto_now_add = True)
     last_modified = db.DateTimeProperty(auto_now = True)
     #+datetime.timedelta(hours=8)
 
+    @classmethod
+    def by_id(cls, uid):
+        return Post.get_by_id(uid, parent = blog_key())
+
     def render(self):
         self._render_text = self.content.replace('\n', '<br>')
         return render_str("post.html", p = self)
 
+    def displayRespondents(self):
+        respondents = Respondent.all().filter('parentAFH =', str(self.key().id())).order('-created')
+        return respondents
+
     def render_page(self):
         self._render_text = self.content.replace('\n', '<br>')
         #print self.created.now()-datetime.timedelta(hours=5)
+        respondents = self.displayRespondents()
         comments = Comment.all().filter('parent_post =', str(self.key().id())).order('-created')
-        return render_str("single-post.html", p = self, comments = comments)
+        return render_str("single-post.html", p = self, comments = comments, respondents = respondents)
 
-
-
-
-class AFH (db.Model):
-    title = db.StringProperty(required = True)
-    subject = db.StringProperty(required = True)
-    difficulty = db.StringProperty(required = True)
-    owner = db.StringProperty(required = True)
-    selectedTutor = db.StringProperty()
-    wage = db.IntegerProperty(required = True)
-    length = db.StringProperty(required = True)
-    description = db.StringProperty(required = True)
-    dateCreated = db.DateTimeProperty(auto_now_add = True)
-
-    #def render(self):
-        #if self.user.name == owner:
-            #render the page so that you have the option to select the best respondent
-            #add a radial button by each name. Make it a form so when you submit, selectTutor is called with value
-        #else:
-            #render normal page where you can add your name to respondees
-            #adding your name first identifies the username that is doing the adding.
-            #that value is passed to selectTutor
+    def render_ownerPage(self):
+        self._render_text = self.content.replace('\n', '<br>')
+        #print self.created.now()-datetime.timedelta(hours=5)
+        respondents = self.displayRespondents()
+        comments = Comment.all().filter('parent_post =', str(self.key().id())).order('-created')
+        return render_str("owner-single-post.html", p = self, comments = comments, respondents = respondents)
 
     def exchangeContact(self):
         firstConnection = Connection(title = self.title, otherUser = self.selectedTutor, otherUserEmail = User.by_name(self.selectedTutor).email , parent_user = str(self.user.key().id()))
@@ -193,14 +186,52 @@ class AFH (db.Model):
         selectedTutor = selectedTutor
         self.exchangeContact()
 
-    def addRespondent(self):
-        respondent = self.user.name #make sure this is getting the responder, not owner
-        toBeAdded = Respondent(respondent = respondent, parentAFH = str(self.key().id()))
-        toBeAdded.put()
+    selectedTutor = db.StringProperty()
 
-    def displayRespondents(self):
-        respondents = Respondent.all().filter('parentAFH =', str(self.key().id()).order('-created'))
-        return respondents
+
+
+
+# class AFH (db.Model):
+#     title = db.StringProperty(required = True)
+#     subject = db.StringProperty(required = True)
+#     difficulty = db.StringProperty(required = True)
+#     owner = db.StringProperty(required = True)
+#     selectedTutor = db.StringProperty()
+#     wage = db.IntegerProperty(required = True)
+#     length = db.StringProperty(required = True)
+#     description = db.StringProperty(required = True)
+#     dateCreated = db.DateTimeProperty(auto_now_add = True)
+
+    #def render(self):
+        #if self.user.name == owner:
+            #render the page so that you have the option to select the best respondent
+            #add a radial button by each name. Make it a form so when you submit, selectTutor is called with value
+        #else:
+            #render normal page where you can add your name to respondees
+            #adding your name first identifies the username that is doing the adding.
+            #that value is passed to selectTutor
+
+    # def exchangeContact(self):
+    #     firstConnection = Connection(title = self.title, otherUser = self.selectedTutor, otherUserEmail = User.by_name(self.selectedTutor).email , parent_user = str(self.user.key().id()))
+    #     firstConnection.put()
+    #     secondConnection = Connection(title = self.title, otherUser = str(self.user.key().id()), otherUserEmail = self.user.email, parent_user = str(User.by_name(self.selectedTutor)))
+    #     secondConnection.put()
+    #     self.response.out.write("This will send you to a page saying that you exchanged contact information with such and such user. Maybe this should redirect to your connections page")
+
+
+    # def selectTutor(self, selectedTutor):
+    #     selectedTutor = selectedTutor
+    #     self.exchangeContact()
+
+    #This is done in PostPage
+    # def addRespondent(self):
+    #     respondent = self.user.name #make sure this is getting the responder, not owner
+    #     toBeAdded = Respondent(respondent = respondent, parentAFH = str(self.key().id()))
+    #     toBeAdded.put()
+
+    # def displayRespondents(self):
+    #     respondents = Respondent.all().filter('parentAFH =', str(self.key().id())).order('-created')
+    #     return respondents
 
 
 class Respondent(db.Model):
@@ -252,8 +283,8 @@ class ConnectionsPage(BlogHandler):
     def get(self, user_id):
         if self.user.key().id() == int(user_id):
             connections = Connection.all().filter('parent_user =', str(user_id)).order('-created')
-            self.response.out.write("error for now because connections are empty %s %s" % (user_id, self.user.name))
-            #self.render_str("connections.html", p = self, connections = connections)
+            #self.response.out.write("error for now because connections are empty %s %s" % (user_id, self.user.name))
+            self.render_str("connections.html", p = self, connections = connections)
         else:
             self.redirect('/blog/?') #this is when you're accessing someone else's data
 
@@ -273,20 +304,30 @@ class PostPage(BlogHandler):
 
         if not post:
             self.error(404)
-            return
+            
+        #this should be post_id.owner
+        if self.user.name == Post.by_id(int(post_id)).author:
+            self.render("ownerPermalink.html", post = post)
+
+
         self.render("permalink.html", post = post)
 
     def post(self, post_id):
         if not self.user:
             self.redirect('/blog')
         
-        is_Apply = self.request.get('apply')
+        isApply = self.request.get('apply')
+        isSelect = self.request.get('select')
 
-        if is_Apply:
+        if isSelect:
+            selected = self.request.get('selectList')
+
+        if isApply:
             respondent = self.user.name #make sure this is getting the responder, not owner
             toBeAdded = Respondent(respondent = respondent, parentAFH = str(post_id))
             toBeAdded.put()
-            self.response.out.write("Congratulations %s" % self.user.name)
+            self.redirect('/blog/%s' % post_id)
+
         
         else:
             content = self.request.get('content').replace('\n', '<br>')
@@ -302,7 +343,6 @@ class PostPage(BlogHandler):
                 created = datetime.now() - timedelta(hours=5)
                 comment = Comment(parent = comment_key(), created = created, content = content, author = self.user.name, parent_post = post_id)
                 comment.put()
-
             #else:
             self.redirect('/blog/%s' % post_id)
 
