@@ -12,11 +12,15 @@
   {% for i in connections %}
 
   <div class="panel panel-default">
-    <div class="panel-heading"> {{i.otherUser}} {{i.created.strftime("%H:%M:%S, %b %d, %Y")}}</div>
+    <div class="panel-heading"> Username is {{i.otherUser}}</div>
+    <div class="panel-heading"> Email is {{i.otherUserEmail}}</div>
+    <div class="panel-heading"> Connection made {{i.created.strftime("%H:%M:%S, %b %d, %Y")}}</div>
     <div class="panel-body">
       {{i.postingTitle | safe}}
     </div>
   </div>
+  <br><br>
+  <hr><hr>
   {% endfor %}
 
 </div>

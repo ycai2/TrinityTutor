@@ -177,12 +177,11 @@ class Post(db.Model):
 
         #change subject to title later
     def exchangeContact(self, user):
-        firstConnection = Connection(postingTitle = self.subject, otherUser = self.selectedTutor, otherUserEmail = User.by_name(self.selectedTutor).email, parent_user = str(user.key().id()))
+        firstConnection = Connection(postingTitle = self.subject, otherUser = self.selectedTutor, otherUserEmail = User.by_name(self.selectedTutor).email, parent_user = User.by_id(user.key().id()).name)
         firstConnection.put()
-        secondConnection = Connection(postingTitle = self.subject, otherUser = str(user.key().id()), otherUserEmail = user.email, parent_user = str(User.by_name(self.selectedTutor)))
+        secondConnection = Connection(postingTitle = self.subject, otherUser = User.by_id(user.key().id()).name, otherUserEmail = User.by_id(user.key().id()).email, parent_user = self.selectedTutor)
         secondConnection.put()
-        #self.response.out.write("This will send you to a page saying that you exchanged contact information with such and such user. Maybe this should redirect to your connections page")
-
+        
 
     def selectTutor(self, selectedTutor, user):
         self.selectedTutor = selectedTutor
@@ -284,10 +283,11 @@ class ConnectionsPage(BlogHandler):
 
     def get(self, user_id):
         if self.user.key().id() == int(user_id):
-            #print User.ser_id
-            connections = Connection.all().filter('parent_user =', str(user_id)).order('-created')
+            username = User.by_id(int(user_id)).name
+            connections = Connection.all().filter('parent_user =',username).order('-created')
             #self.response.out.write("error for now because connections are empty %s %s" % (user_id, self.user.name))
-            self.render_str("connections.html", p = self, connections = connections)
+            #self.render_str("connections.html")
+            self.render("connections.html", p = self, connections = connections)
         else:
             self.redirect('/blog/?') #this is when you're accessing someone else's data
 
@@ -324,7 +324,7 @@ class PostPage(BlogHandler):
         isSelect = self.request.get('select')
 
         if isSelect:
-            selected = self.request.get('selectList')
+            selected = self.request.get('selectList') #check this
             thisAFH = Post.by_id(int(post_id))
             thisAFH.selectTutor(selected, self.user)
             self.redirect('/connections')
