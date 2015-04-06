@@ -73,13 +73,6 @@ class Handler(webapp2.RequestHandler):
         uid = self.read_secure_cookie('user_id')
         self.user = uid and User.by_id(int(uid))
 
-
-#default function initialized when projet is created
-class MainPage(Handler):
-  def get(self):
-      self.write('Hello, World!')
-
-
 ##### user stuff
 
 #generates a salt value
@@ -184,7 +177,7 @@ class Post(db.Model):
         
 
     def selectTutor(self, selectedTutor, user):
-        selectedTutor = selectedTutor #this line actually doesn't work correctly
+        self.selectedTutor = selectedTutor #this line actually doesn't work correctly
         self.exchangeContact(user)
 
     
@@ -282,6 +275,7 @@ class ConnectionRedirect(Handler):
 class ConnectionsPage(Handler):
 
     def get(self, user_id):
+        print "here"
         if self.user.key().id() == int(user_id):
             username = User.by_id(int(user_id)).name
             connections = Connection.all().filter('parent_user =',username).order('-created')
@@ -289,12 +283,7 @@ class ConnectionsPage(Handler):
             #self.render_str("connections.html")
             self.render("connections.html", p = self, connections = connections)
         else:
-            self.redirect('//?') #this is when you're accessing someone else's data
-
-
-
-
-
+            self.redirect('/') #this is when you're accessing someone else's data
 
 
 
@@ -334,7 +323,7 @@ class PostPage(Handler):
             respondent = self.user.name #make sure this is getting the responder, not owner
             toBeAdded = Respondent(respondent = respondent, parentAFH = str(post_id))
             toBeAdded.put()
-            self.redirect('//%s' % post_id)
+            self.redirect('/afh/%s' % post_id)
 
         else:
             content = self.request.get('content').replace('\n', '<br>')
@@ -351,21 +340,7 @@ class PostPage(Handler):
                 comment = Comment(parent = comment_key(), created = created, content = content, author = self.user.name, parent_post = post_id)
                 comment.put()
             #else:
-            self.redirect('//%s' % post_id)
-
-class Applied(Handler):
-    def post(self):
-        if not self.user:
-            self.redirect('/signup')
-        else:
-            post_id = self.request.get('postID')
-            respondent = self.user.name #make sure this is getting the responder, not owner
-            toBeAdded = Respondent(respondent = respondent, parentAFH = str(post_id))
-            toBeAdded.put()
-            self.response.out.write("Congratulations %s" % self.user.name)
-
-
-
+            self.redirect('/afh/%s' % post_id)
 
 
 class NewPost(Handler):
@@ -386,7 +361,7 @@ class NewPost(Handler):
         if subject and content:
             p = Post(parent = _key(), subject = subject, content = content, author = self.user.name)
             p.put()
-            self.redirect('//%s' % str(p.key().id()))
+            self.redirect('/afh/%s' % str(p.key().id()))
         
         else:
             error = "subject and content, please!"
@@ -487,7 +462,7 @@ class Welcome(Handler):
 
 
 app = webapp2.WSGIApplication([('/', Front),
-                               ('/([0-9]+)(?:.json)?', PostPage),
+                               ('/afh/([0-9]+)(?:.json)?', PostPage),
                                ('/newpost', NewPost),
                                ('/signup', Register),
                                ('/login', Login),

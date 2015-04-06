@@ -9,7 +9,7 @@ handlers:
   static_dir: static
 
 - url: /.*
-  script: blog.app
+  script: trinityTutor.app
 
 libraries:
 - name: jinja2
