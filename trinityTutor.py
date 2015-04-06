@@ -37,7 +37,7 @@ def check_secure_val(secure_val):
         return val
 
 # Main handler
-class BlogHandler(webapp2.RequestHandler):
+class Handler(webapp2.RequestHandler):
     def write(self, *a, **kw):
         self.response.out.write(*a, **kw)
 
@@ -75,7 +75,7 @@ class BlogHandler(webapp2.RequestHandler):
 
 
 #default function initialized when projet is created
-class MainPage(BlogHandler):
+class MainPage(Handler):
   def get(self):
       self.write('Hello, World!')
 
@@ -133,8 +133,8 @@ class User(db.Model):
 
 
 
-def blog_key(name = 'default'):
-    return db.Key.from_path('blogs', name)
+def _key(name = 'default'):
+    return db.Key.from_path('s', name)
 
 def comment_key(name = 'default'):
     return db.Key.from_path('comments', name)
@@ -151,7 +151,7 @@ class Post(db.Model):
 
     @classmethod
     def by_id(cls, uid):
-        return Post.get_by_id(uid, parent = blog_key())
+        return Post.get_by_id(uid, parent = _key())
 
     def render(self):
         self._render_text = self.content.replace('\n', '<br>')
@@ -245,7 +245,7 @@ class Respondent(db.Model):
 
 
 #Front page
-class BlogFront(BlogHandler):
+class Front(Handler):
 
     def get(self):
         posts = greetings = Post.all().order('-created')
@@ -272,14 +272,14 @@ class Connection(db.Model):
     created = db.DateTimeProperty(auto_now_add = True)
     parent_user = db.StringProperty(required = True)
 
-class ConnectionRedirect(BlogHandler):
+class ConnectionRedirect(Handler):
     def get(self):
         if self.user:
             self.redirect('connections/%s' % str(self.user.key().id()))
         else:
             self.redirect('/login')
 
-class ConnectionsPage(BlogHandler):
+class ConnectionsPage(Handler):
 
     def get(self, user_id):
         if self.user.key().id() == int(user_id):
@@ -289,7 +289,7 @@ class ConnectionsPage(BlogHandler):
             #self.render_str("connections.html")
             self.render("connections.html", p = self, connections = connections)
         else:
-            self.redirect('/blog/?') #this is when you're accessing someone else's data
+            self.redirect('//?') #this is when you're accessing someone else's data
 
 
 
@@ -299,10 +299,10 @@ class ConnectionsPage(BlogHandler):
 
 
 
-class PostPage(BlogHandler):
+class PostPage(Handler):
 
     def get(self, post_id):
-        key = db.Key.from_path('Post', int(post_id), parent=blog_key())
+        key = db.Key.from_path('Post', int(post_id), parent=_key())
         post = db.get(key)
 
         if not post:
@@ -319,7 +319,7 @@ class PostPage(BlogHandler):
 
     def post(self, post_id):
         if not self.user:
-            self.redirect('/blog')
+            self.redirect('/')
         
         isApply = self.request.get('apply')
         isSelect = self.request.get('select')
@@ -334,12 +334,12 @@ class PostPage(BlogHandler):
             respondent = self.user.name #make sure this is getting the responder, not owner
             toBeAdded = Respondent(respondent = respondent, parentAFH = str(post_id))
             toBeAdded.put()
-            self.redirect('/blog/%s' % post_id)
+            self.redirect('//%s' % post_id)
 
         else:
             content = self.request.get('content').replace('\n', '<br>')
 
-            key = db.Key.from_path('Post', int(post_id), parent=blog_key())
+            key = db.Key.from_path('Post', int(post_id), parent=_key())
             post = db.get(key)
 
             if not post:
@@ -351,9 +351,9 @@ class PostPage(BlogHandler):
                 comment = Comment(parent = comment_key(), created = created, content = content, author = self.user.name, parent_post = post_id)
                 comment.put()
             #else:
-            self.redirect('/blog/%s' % post_id)
+            self.redirect('//%s' % post_id)
 
-class Applied(BlogHandler):
+class Applied(Handler):
     def post(self):
         if not self.user:
             self.redirect('/signup')
@@ -368,7 +368,7 @@ class Applied(BlogHandler):
 
 
 
-class NewPost(BlogHandler):
+class NewPost(Handler):
     def get(self):
         if self.user:
             self.render("newpost.html")
@@ -377,16 +377,16 @@ class NewPost(BlogHandler):
 
     def post(self):
         if not self.user:
-            self.redirect('/blog')
+            self.redirect('/')
 
         subject = self.request.get('subject')
         content = self.request.get('content')
         
 
         if subject and content:
-            p = Post(parent = blog_key(), subject = subject, content = content, author = self.user.name)
+            p = Post(parent = _key(), subject = subject, content = content, author = self.user.name)
             p.put()
-            self.redirect('/blog/%s' % str(p.key().id()))
+            self.redirect('//%s' % str(p.key().id()))
         
         else:
             error = "subject and content, please!"
@@ -405,7 +405,7 @@ EMAIL_RE  = re.compile(r'^[\S]+@[\S]+\.[\S]+$')
 def valid_email(email):
     return not email or EMAIL_RE.match(email)
 
-class Signup(BlogHandler):
+class Signup(Handler):
     def get(self):
         self.render("signup-form.html")
 
@@ -454,9 +454,9 @@ class Register(Signup):
             u.put()
 
             self.login(u)
-            self.redirect('/blog')
+            self.redirect('/')
 
-class Login(BlogHandler):
+class Login(Handler):
     def get(self):
         self.render('login-form.html')
 
@@ -467,18 +467,18 @@ class Login(BlogHandler):
         u = User.login(username, password)
         if u:
             self.login(u)
-            self.redirect('/blog')
+            self.redirect('/')
         else:
             msg = 'Invalid login'
             self.render('login-form.html', error = msg)
 
 
-class Logout(BlogHandler):
+class Logout(Handler):
     def get(self):
         self.logout()
-        self.redirect('/blog')
+        self.redirect('/')
 
-class Welcome(BlogHandler):
+class Welcome(Handler):
     def get(self):
         if self.user:
             self.render('welcome.html', username = self.user.name)
@@ -486,11 +486,9 @@ class Welcome(BlogHandler):
             self.redirect('/signup')
 
 
-app = webapp2.WSGIApplication([('/', MainPage),
-                               ('/blog/?(?:.json)?', BlogFront),
-                               ('/blog/([0-9]+)(?:.json)?', PostPage),
-                               ('/blog/newpost', NewPost),
-                               ('/blog/applied', Applied),
+app = webapp2.WSGIApplication([('/', Front),
+                               ('/([0-9]+)(?:.json)?', PostPage),
+                               ('/newpost', NewPost),
                                ('/signup', Register),
                                ('/login', Login),
                                ('/logout', Logout),
