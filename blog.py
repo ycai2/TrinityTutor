@@ -184,7 +184,7 @@ class Post(db.Model):
         
 
     def selectTutor(self, selectedTutor, user):
-        self.selectedTutor = selectedTutor
+        selectedTutor = selectedTutor #this line actually doesn't work correctly
         self.exchangeContact(user)
 
     
@@ -267,7 +267,7 @@ class Comment(db.Model):
 
 class Connection(db.Model):
     otherUser = db.StringProperty(required = True)
-    otherUserEmail = db.StringProperty()
+    otherUserEmail = db.StringProperty(required = True)
     postingTitle = db.StringProperty(required = True)
     created = db.DateTimeProperty(auto_now_add = True)
     parent_user = db.StringProperty(required = True)
@@ -309,12 +309,13 @@ class PostPage(BlogHandler):
             self.error(404)
             
         #this should be post_id.owner
-        if self.user.name == Post.by_id(int(post_id)).author:
-            self.render("ownerPermalink.html", post = post)
+        if not self.user:
+            self.redirect("/login")
         else:
-
-
-            self.render("permalink.html", post = post)
+            if self.user.name == Post.by_id(int(post_id)).author:
+                self.render("ownerPermalink.html", post = post)
+            else:
+                self.render("permalink.html", post = post)
 
     def post(self, post_id):
         if not self.user:

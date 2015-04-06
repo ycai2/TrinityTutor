@@ -35,7 +35,9 @@
     <option value="{{i.respondent}}"> {{i.respondent}} </option>
   {% endfor %}
   </select>
-  <input type="submit" name="select" class="btn btn-primary" value="Select this Tutor"></input>
+   <input type="submit" name="select" class="btn btn-primary" value="Select this Tutor"></input>
+
+    <div>Selected Tutor is {{p.selectedTutor}} </div>
 
 </form>
 <br><br>
@@ -54,9 +56,6 @@
 {% endfor %}
 
 <form method="post" class="jumbotron">
-  <input type="submit" name="apply" class="btn btn-primary" value="Apply for this position now"></input>
-  <br><br>
-
   <div>
     <b>Comment</b>
   </div>
