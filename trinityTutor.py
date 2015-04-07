@@ -90,15 +90,14 @@ def valid_pw(name, password, h):
     salt = h.split(',')[0]
     return h == make_pw_hash(name, password, salt)
 
-
 def users_key(group = 'default'):
     return db.Key.from_path('users', group)
-
 
 #Object for User database
 class User(db.Model):
     name = db.StringProperty(required = True)
     pw_hash = db.StringProperty(required = True)
+    created = db.DateTimeProperty(auto_now_add = True)
     email = db.StringProperty()
 
     @classmethod
@@ -124,6 +123,9 @@ class User(db.Model):
         if u and valid_pw(name, pw, u.pw_hash):
             return u
 
+    def render(self):
+        # self._render_text = self.content.replace('\n', '<br>')
+        return render_str("users.html", p = self)
 
 
 def _key(name = 'default'):
@@ -175,14 +177,8 @@ class Post(db.Model):
         secondConnection = Connection(postingTitle = self.subject, otherUser = User.by_id(user.key().id()).name, otherUserEmail = User.by_id(user.key().id()).email, parent_user = self.selectedTutor)
         secondConnection.put()
         
-
     def selectTutor(self, selectedTutor, user):
-        self.selectedTutor = selectedTutor #this line actually doesn't work correctly
         self.exchangeContact(user)
-
-    
-
-
 
 
 # class AFH (db.Model):
@@ -212,7 +208,6 @@ class Post(db.Model):
     #     secondConnection.put()
     #     self.response.out.write("This will send you to a page saying that you exchanged contact information with such and such user. Maybe this should redirect to your connections page")
 
-
     # def selectTutor(self, selectedTutor):
     #     selectedTutor = selectedTutor
     #     self.exchangeContact()
@@ -233,30 +228,21 @@ class Respondent(db.Model):
     parentAFH = db.StringProperty()
     created = db.DateTimeProperty(auto_now_add = True)
 
-
-
-
-
-#Front page
 class Front(Handler):
-
     def get(self):
         posts = greetings = Post.all().order('-created')
-
         self.render('front.html', posts = posts)
 
-#Object for Comment database
+class ShowAllUsers(Handler):
+    def get(self):
+        users = User.all().order('-created')
+        self.render("front.html", posts = users)
+
 class Comment(db.Model):
     content = db.TextProperty(required = True)
     author = db.StringProperty(required = True)
     created = db.DateTimeProperty(auto_now_add = True)
     parent_post = db.StringProperty(required = True)
-
-
-
-
-
-
 
 class Connection(db.Model):
     otherUser = db.StringProperty(required = True)
@@ -273,23 +259,15 @@ class ConnectionRedirect(Handler):
             self.redirect('/login')
 
 class ConnectionsPage(Handler):
-
     def get(self, user_id):
-        print "here"
         if self.user.key().id() == int(user_id):
             username = User.by_id(int(user_id)).name
             connections = Connection.all().filter('parent_user =',username).order('-created')
-            #self.response.out.write("error for now because connections are empty %s %s" % (user_id, self.user.name))
-            #self.render_str("connections.html")
             self.render("connections.html", p = self, connections = connections)
         else:
-            self.redirect('/') #this is when you're accessing someone else's data
-
-
-
+            self.redirect('/')
 
 class PostPage(Handler):
-
     def get(self, post_id):
         key = db.Key.from_path('Post', int(post_id), parent=_key())
         post = db.get(key)
@@ -297,7 +275,6 @@ class PostPage(Handler):
         if not post:
             self.error(404)
             
-        #this should be post_id.owner
         if not self.user:
             self.redirect("/login")
         else:
@@ -314,20 +291,32 @@ class PostPage(Handler):
         isSelect = self.request.get('select')
 
         if isSelect:
-            selected = self.request.get('selectList') #check this
-            thisAFH = Post.by_id(int(post_id))
-            thisAFH.selectTutor(selected, self.user)
-            self.redirect('/connections')
+            selected = self.request.get('selectList')
+            if selected:
+                thisAFH = Post.by_id(int(post_id))
+                thisAFH.selectedTutor = selected
+                thisAFH.put()
+                thisAFH.selectTutor(selected, self.user)
+                self.redirect('/connections')
+            else:
+                self.redirect('/')
 
         elif isApply:
-            respondent = self.user.name #make sure this is getting the responder, not owner
-            toBeAdded = Respondent(respondent = respondent, parentAFH = str(post_id))
-            toBeAdded.put()
-            self.redirect('/afh/%s' % post_id)
+            respondent = self.user.name
+            alreadyAppliedFlag = False
+            respondents = Respondent.all().filter('parentAFH =', str(post_id)).order('-created')
+            for each in respondents:
+                if each.respondent == respondent:
+                    alreadyAppliedFlag = True
+            if alreadyAppliedFlag:
+                self.redirect('/afh/%s' % post_id)
+            else:
+                toBeAdded = Respondent(respondent = respondent, parentAFH = str(post_id))
+                toBeAdded.put()
+                self.redirect('/afh/%s' % post_id)
 
         else:
             content = self.request.get('content').replace('\n', '<br>')
-
             key = db.Key.from_path('Post', int(post_id), parent=_key())
             post = db.get(key)
 
@@ -335,13 +324,12 @@ class PostPage(Handler):
                 self.error(404)
                 return
 
-            if content:
-                created = datetime.now() - timedelta(hours=5)
-                comment = Comment(parent = comment_key(), created = created, content = content, author = self.user.name, parent_post = post_id)
-                comment.put()
-            #else:
-            self.redirect('/afh/%s' % post_id)
-
+            else:
+                if content:
+                    created = datetime.now() - timedelta(hours=5)
+                    comment = Comment(parent = comment_key(), created = created, content = content, author = self.user.name, parent_post = post_id)
+                    comment.put()
+                self.redirect('/afh/%s' % post_id)
 
 class NewPost(Handler):
     def get(self):
@@ -353,19 +341,18 @@ class NewPost(Handler):
     def post(self):
         if not self.user:
             self.redirect('/')
-
-        subject = self.request.get('subject')
-        content = self.request.get('content')
-        
-
-        if subject and content:
-            p = Post(parent = _key(), subject = subject, content = content, author = self.user.name)
-            p.put()
-            self.redirect('/afh/%s' % str(p.key().id()))
-        
         else:
-            error = "subject and content, please!"
-            self.render("newpost.html", subject=subject, content=content, error=error)
+            subject = self.request.get('subject')
+            content = self.request.get('content')
+
+            if subject and content:
+                p = Post(parent = _key(), subject = subject, content = content, author = self.user.name)
+                p.put()
+                self.redirect('/afh/%s' % str(p.key().id()))
+            
+            else:
+                error = "subject and content, please!"
+                self.render("newpost.html", subject=subject, content=content, error=error)
 
 
 USER_RE = re.compile(r"^[a-zA-Z0-9_-]{3,20}$")
@@ -419,7 +406,6 @@ class Signup(Handler):
 
 class Register(Signup):
     def done(self):
-        #make sure the user doesn't already exist
         u = User.by_name(self.username)
         if u:
             msg = 'That user already exists.'
@@ -427,7 +413,6 @@ class Register(Signup):
         else:
             u = User.register(self.username, self.password, self.email)
             u.put()
-
             self.login(u)
             self.redirect('/')
 
@@ -446,7 +431,6 @@ class Login(Handler):
         else:
             msg = 'Invalid login'
             self.render('login-form.html', error = msg)
-
 
 class Logout(Handler):
     def get(self):
@@ -468,6 +452,8 @@ app = webapp2.WSGIApplication([('/', Front),
                                ('/login', Login),
                                ('/logout', Logout),
                                ('/welcome', Welcome),
+                               #('/myaccount', ShowMyAccount)
+                               ('/users', ShowAllUsers),
                                ('/connections', ConnectionRedirect),
                                ('/connections/([0-9]+)(?:.json)?', ConnectionsPage)
                                ],

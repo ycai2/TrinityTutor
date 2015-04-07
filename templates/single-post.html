@@ -27,14 +27,19 @@
   <hr>
 </div>
 
-<div> LIST OF RESPONDENTS </div>
-<select>
-{% for i in respondents %}
-  <option value="{{i.respondent}}"> {{i.respondent}} </option>
-{% endfor %}
-</select>
+{% if not p.selectedTutor: %}
+  <div> LIST OF RESPONDENTS </div>
+  <select>
+  {% for i in respondents %}
+    <option value="{{i.respondent}}"> {{i.respondent}} </option>
+  {% endfor %}
+  </select>
+  <br><br>
+{% endif %}
+{% if p.selectedTutor: %}
+  <div>Selected Tutor is {{p.selectedTutor}} </div>
+{% endif %}
 
-<br><br>
 <hr><hr>
 
 
@@ -50,7 +55,9 @@
 {% endfor %}
 
 <form method="post" class="jumbotron">
-  <input type="submit" name="apply" class="btn btn-primary" value="Apply for this position now"></input>
+  {% if not p.selectedTutor: %}
+    <input type="submit" name="apply" class="btn btn-primary" value="Apply for this position now"></input>
+  {% endif %}
   <br><br>
 
   <div>

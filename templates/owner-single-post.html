@@ -27,7 +27,7 @@
   <hr>
 </div>
 
-
+{% if not p.selectedTutor: %}
 <form method="post" class="jumbotron">
   <div> OWNERS LIST OF RESPONDENTS </div>
   <select name="selectList">
@@ -35,12 +35,15 @@
     <option value="{{i.respondent}}"> {{i.respondent}} </option>
   {% endfor %}
   </select>
-   <input type="submit" name="select" class="btn btn-primary" value="Select this Tutor"></input>
-
-    <div>Selected Tutor is {{p.selectedTutor}} </div>
-
+    <input type="submit" name="select" class="btn btn-primary" value="Select this Tutor"></input>
+    <br><br>
+{% endif %}
 </form>
-<br><br>
+
+{% if p.selectedTutor: %}
+  <div>Selected Tutor is {{p.selectedTutor}} </div>
+{% endif %}
+
 <hr><hr>
 
 
