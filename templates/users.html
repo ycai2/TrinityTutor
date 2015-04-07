@@ -1,0 +1,24 @@
+<div class="post">
+  <div class="post-heading">
+    <h2>
+      <a href="/users/{{p.key().id()}}"> I am the href that will point to users/id eventually.... {{p.name}}</a>
+      
+    </h2>
+    Username is
+    <div class="label label-warning">
+      {{p.name}}
+    </div>
+    <h4>
+      <div class="label label-info">
+        Date I joined Trinity Tutor: {{p.created.strftime("%b %d, %Y")}}
+      </div>
+    </h4>
+  </div>
+  <hr>
+
+  <div class="post-content">
+     I am the empty _render_text in users.html<!-- {{p._render_text | safe}} -->
+  </div>
+
+  
+</div>
