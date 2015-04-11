@@ -31,9 +31,11 @@
 <form method="post" class="jumbotron">
   <div> OWNERS LIST OF RESPONDENTS </div>
   <select name="selectList">
-  {% for i in respondents %}
-    <option value="{{i.respondent}}"> {{i.respondent}} </option>
-  {% endfor %}
+  {% if respondents: %}
+    {% for i in respondents %}
+      <option value="{{i.respondent}}"> {{i.respondent}} </option>
+    {% endfor %}
+  {% endif %}
   </select>
     <input type="submit" name="select" class="btn btn-primary" value="Select this Tutor"></input>
     <br><br>
