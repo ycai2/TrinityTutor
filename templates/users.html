@@ -5,9 +5,9 @@
       
     </h2>
     Username is
-    <div class="label label-warning">
+    <a href="/users/{{p.key().id()}}" class="label label-warning">
       {{p.name}}
-    </div>
+    </a>
     <h4>
       <div class="label label-info">
         Date I joined Trinity Tutor: {{p.created.strftime("%b %d, %Y")}}
