@@ -7,9 +7,9 @@
 
     <h5>
       Posted by
-      <div class="label label-warning">
+      <a href="/users/{{p.key().id()}}" class="label label-warning">
         {{p.author}}
-      </div>&nbsp;
+      </a>&nbsp;
 
       <div class="label label-info">
         {{p.created.strftime("%b %d, %Y")}}
@@ -37,14 +37,18 @@
   <br><br>
 
   <div> Respondent Profiles </div>
-  <menu type="context">
+  <menu>
+    {% set  count = 1 %}
     {% for i in respondents %}
       <menuitem>
-        <div> Username: 
+        <div> {{count}}. </div>
+        <div>  Username: 
           <a href="/users/{{i.key().id()}}">{{i.respondent}}</a>
         </div>
         <div> User Rating: {{i.rating}} </div>
       </menuitem>
+      <br>
+      {% set count = count + 1 %}
     {% endfor %}
   </menu>
 {% endif %}
