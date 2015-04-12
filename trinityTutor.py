@@ -19,6 +19,7 @@ jinja_env = jinja2.Environment(loader = jinja2.FileSystemLoader(template_dir),
 
 secret = 'hiiii'
 
+
 #Global function to render html
 def render_str(template, **params):
     t = jinja_env.get_template(template)
