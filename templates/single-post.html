@@ -35,7 +35,20 @@
   {% endfor %}
   </select>
   <br><br>
+
+  <div> Respondent Profiles </div>
+  <menu type="context">
+    {% for i in respondents %}
+      <menuitem>
+        <div> Username: 
+          <a href="/users/{{i.key().id()}}">{{i.respondent}}</a>
+        </div>
+        <div> User Rating: {{i.rating}} </div>
+      </menuitem>
+    {% endfor %}
+  </menu>
 {% endif %}
+
 {% if p.selectedTutor: %}
   <div>Selected Tutor is {{p.selectedTutor}} </div>
 {% endif %}
