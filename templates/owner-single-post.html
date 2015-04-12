@@ -39,6 +39,18 @@
   </select>
     <input type="submit" name="select" class="btn btn-primary" value="Select this Tutor"></input>
     <br><br>
+  <div> Respondent Profiles </div>
+  <menu type="context">
+    {% for i in respondents %}
+      <menuitem>
+        <div> Username: 
+          <a href="/users/{{i.key().id()}}">{{i.respondent}}</a>
+        </div>
+        <div> User Rating: {{i.rating}} </div>
+      </menuitem>
+    {% endfor %}
+  </menu>
+
 {% endif %}
 </form>
 
