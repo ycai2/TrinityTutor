@@ -98,7 +98,11 @@ class User(db.Model):
     name = db.StringProperty(required = True)
     pw_hash = db.StringProperty(required = True)
     created = db.DateTimeProperty(auto_now_add = True)
-    email = db.StringProperty()
+    email = db.StringProperty(required = True)
+    nickname = db.StringProperty(required = True)
+    year = db.IntegerProperty(required = True)
+    major = db.StringProperty(required = True)
+    description = db.StringProperty()
 
     @classmethod
     def by_id(cls, uid):
@@ -110,12 +114,16 @@ class User(db.Model):
         return u
 
     @classmethod
-    def register(cls, name, pw, email = None):
+    def register(cls, name, pw, email, nickname, year, major, description):
         pw_hash = make_pw_hash(name, pw)
         return User(parent = users_key(),
                     name = name,
                     pw_hash = pw_hash,
-                    email = email)
+                    email = email,
+                    nickname = nickname,
+                    year = int(year),
+                    major = major,
+                    description = description)
 
     @classmethod
     def login(cls, name, pw):
@@ -331,6 +339,8 @@ class PostPage(Handler):
                     comment.put()
                 self.redirect('/afh/%s' % post_id)
 
+
+
 class NewPost(Handler):
     def get(self):
         if self.user:
@@ -377,9 +387,18 @@ class Signup(Handler):
         self.password = self.request.get('password')
         self.verify = self.request.get('verify')
         self.email = self.request.get('email')
+        self.name = self.request.get('name')
+        self.year = self.request.get('year')
+        self.major = self.request.get('major')
+        self.description = self.request.get('description')
+
 
         params = dict(username = self.username,
-                      email = self.email)
+                      email = self.email,
+                      name = self.name,
+                      year = self.year,
+                      major = self.major,
+                      description = self.description)
 
         if not valid_username(self.username):
             params['error_username'] = "That's not a valid username."
@@ -388,6 +407,7 @@ class Signup(Handler):
         if not valid_password(self.password):
             params['error_password'] = "Password has to be at least 3 character/numbers"
             have_error = True
+            
         elif self.password != self.verify:
             params['error_verify'] = "Your passwords didn't match."
             have_error = True
@@ -395,6 +415,8 @@ class Signup(Handler):
         if not valid_email(self.email):
             params['error_email'] = "That's not a valid email."
             have_error = True
+
+
 
         if have_error:
             self.render('signup-form.html', **params)
@@ -411,7 +433,7 @@ class Register(Signup):
             msg = 'That user already exists.'
             self.render('signup-form.html', error_username = msg)
         else:
-            u = User.register(self.username, self.password, self.email)
+            u = User.register(self.username, self.password, self.email, self.name, self.year, self.major, self.description)
             u.put()
             self.login(u)
             self.redirect('/')
@@ -455,6 +477,7 @@ app = webapp2.WSGIApplication([('/', Front),
                                #('/myaccount', ShowMyAccount)
                                ('/users', ShowAllUsers),
                                ('/connections', ConnectionRedirect),
-                               ('/connections/([0-9]+)(?:.json)?', ConnectionsPage)
+                               ('/connections/([0-9]+)(?:.json)?', ConnectionsPage),
+                               #('/profile/([0-9]+)(?:.json)?', Profile)
                                ],
                               debug=True)
