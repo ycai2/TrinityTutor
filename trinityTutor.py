@@ -478,6 +478,6 @@ app = webapp2.WSGIApplication([('/', Front),
                                ('/users', ShowAllUsers),
                                ('/connections', ConnectionRedirect),
                                ('/connections/([0-9]+)(?:.json)?', ConnectionsPage),
-                               ('/profile/([0-9]+)(?:.json)?', Profile)
+                               #('/profile/([0-9]+)(?:.json)?', Profile)
                                ],
                               debug=True)
