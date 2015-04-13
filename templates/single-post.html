@@ -7,7 +7,7 @@
 
     <h5>
       Posted by
-      <a href="/users/{{p.key().id()}}" class="label label-warning">
+      <a href="/users/{{p.authorID}}" class="label label-warning">
         {{p.author}}
       </a>&nbsp;
 
@@ -28,14 +28,6 @@
 </div>
 
 {% if not p.selectedTutor: %}
-  <div> LIST OF RESPONDENTS </div>
-  <select>
-  {% for i in respondents %}
-    <option value="{{i.respondent}}"> {{i.respondent}} </option>
-  {% endfor %}
-  </select>
-  <br><br>
-
   <div> Respondent Profiles </div>
   <menu>
     {% set  count = 1 %}
@@ -54,7 +46,7 @@
 {% endif %}
 
 {% if p.selectedTutor: %}
-  <div>Selected Tutor is {{p.selectedTutor}} </div>
+  <div> Selected Tutor: <a href="/users/{{p.selectedTutorID}}">{{p.selectedTutor}} </a> </div>
 {% endif %}
 
 <hr><hr>

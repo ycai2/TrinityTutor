@@ -149,10 +149,12 @@ class Post(db.Model):
     subject = db.StringProperty(required = True)
     content = db.TextProperty(required = True)
     author = db.StringProperty(required = True)
+    authorID = db.StringProperty(required = True)
     created = db.DateTimeProperty(auto_now_add = True)
     last_modified = db.DateTimeProperty(auto_now = True)
     #+datetime.timedelta(hours=8)
     selectedTutor = db.StringProperty()
+    selectedTutorID = db.StringProperty()
 
     @classmethod
     def by_id(cls, uid):
@@ -182,9 +184,9 @@ class Post(db.Model):
 
         #change subject to title later
     def exchangeContact(self, user):
-        firstConnection = Connection(postingTitle = self.subject, otherUser = self.selectedTutor, otherUserEmail = User.by_name(self.selectedTutor).email, parent_user = User.by_id(user.key().id()).name)
+        firstConnection = Connection(postingTitle = self.subject, otherUser = self.selectedTutor, otherUserID = str(User.by_name(self.selectedTutor).key().id()), otherUserEmail = User.by_name(self.selectedTutor).email, parent_user = User.by_id(user.key().id()).name)
         firstConnection.put()
-        secondConnection = Connection(postingTitle = self.subject, otherUser = User.by_id(user.key().id()).name, otherUserEmail = User.by_id(user.key().id()).email, parent_user = self.selectedTutor)
+        secondConnection = Connection(postingTitle = self.subject, otherUser = User.by_id(user.key().id()).name, otherUserID = str(user.key().id()), otherUserEmail = User.by_id(user.key().id()).email, parent_user = self.selectedTutor)
         secondConnection.put()
         
     def selectTutor(self, selectedTutor, user):
@@ -257,6 +259,7 @@ class Comment(db.Model):
 
 class Connection(db.Model):
     otherUser = db.StringProperty(required = True)
+    otherUserID = db.StringProperty(required = True)
     otherUserEmail = db.StringProperty(required = True)
     postingTitle = db.StringProperty(required = True)
     created = db.DateTimeProperty(auto_now_add = True)
@@ -269,14 +272,24 @@ class ConnectionRedirect(Handler):
         else:
             self.redirect('/login')
 
+class ShowMyAccount(Handler):
+    def get(self):
+        if self.user:
+            self.redirect('users/%s' % str(self.user.key().id()))
+        else:
+            self.redirect('/login')
+
 class ConnectionsPage(Handler):
     def get(self, user_id):
-        if self.user.key().id() == int(user_id):
-            username = User.by_id(int(user_id)).name
-            connections = Connection.all().filter('parent_user =',username).order('-created')
-            self.render("connections.html", p = self, connections = connections)
+        if self.user:
+            if self.user.key().id() == int(user_id):
+                username = User.by_id(int(user_id)).name
+                connections = Connection.all().filter('parent_user =',username).order('-created')
+                self.render("connections.html", p = self, connections = connections)
+            else:
+                self.redirect('/')
         else:
-            self.redirect('/')
+            self.redirect('/login')
 
 class PostPage(Handler):
     def get(self, post_id):
@@ -306,6 +319,7 @@ class PostPage(Handler):
             if selected:
                 thisAFH = Post.by_id(int(post_id))
                 thisAFH.selectedTutor = selected
+                thisAFH.selectedTutorID = str(User.by_name(selected).key().id())
                 thisAFH.put()
                 thisAFH.selectTutor(selected, self.user)
                 self.redirect('/connections')
@@ -359,7 +373,7 @@ class NewPost(Handler):
             content = self.request.get('content')
 
             if subject and content:
-                p = Post(parent = _key(), subject = subject, content = content, author = self.user.name)
+                p = Post(parent = _key(), subject = subject, content = content, author = self.user.name, authorID = str(self.user.key().id()))
                 p.put()
                 self.redirect('/afh/%s' % str(p.key().id()))
             
@@ -485,7 +499,7 @@ app = webapp2.WSGIApplication([('/', Front),
                                ('/login', Login),
                                ('/logout', Logout),
                                ('/welcome', Welcome),
-                               #('/myaccount', ShowMyAccount)
+                               ('/myaccount', ShowMyAccount),
                                ('/users', ShowAllUsers),
                                ('/connections', ConnectionRedirect),
                                ('/connections/([0-9]+)(?:.json)?', ConnectionsPage),
