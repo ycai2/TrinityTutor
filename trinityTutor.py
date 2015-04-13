@@ -137,6 +137,7 @@ class User(db.Model):
         return render_str("users.html", p = self)
 
 
+
 def _key(name = 'default'):
     return db.Key.from_path('s', name)
 
@@ -235,6 +236,7 @@ class Post(db.Model):
 class Respondent(db.Model):
     respondent = db.StringProperty(required = True)
     parentAFH = db.StringProperty()
+    userid = db.StringProperty(required = True)
     created = db.DateTimeProperty(auto_now_add = True)
 
 class Front(Handler):
@@ -320,7 +322,7 @@ class PostPage(Handler):
             if alreadyAppliedFlag:
                 self.redirect('/afh/%s' % post_id)
             else:
-                toBeAdded = Respondent(respondent = respondent, parentAFH = str(post_id))
+                toBeAdded = Respondent(respondent = respondent, parentAFH = str(post_id), userid = str(User.by_name(respondent).key().id()))
                 toBeAdded.put()
                 self.redirect('/afh/%s' % post_id)
 
@@ -439,6 +441,14 @@ class Register(Signup):
             self.login(u)
             self.redirect('/')
 
+class Profile(Handler):
+    def get(self, user_id):
+        user = User.by_id(int(user_id))
+        if not self.user:
+            self.redirect("/login")
+        else:
+            self.render("profile.html", u = user)
+
 class Login(Handler):
     def get(self):
         self.render('login-form.html')
@@ -479,6 +489,6 @@ app = webapp2.WSGIApplication([('/', Front),
                                ('/users', ShowAllUsers),
                                ('/connections', ConnectionRedirect),
                                ('/connections/([0-9]+)(?:.json)?', ConnectionsPage),
-                               #('/profile/([0-9]+)(?:.json)?', Profile)
+                               ('/users/([0-9]+)(?:.json)?', Profile)
                                ],
                               debug=True)
