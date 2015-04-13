@@ -4,16 +4,28 @@
     <a href="/users/{{p.key().id()}}" class="label label-warning">
       {{p.name}}
     </a>
+    <div class="post-content">
+      But most people call me {{p.nickname}}
+    </div>
+
+    <div class="post-content">
+      Major: {{p.major}}
+    </div>
+
+    <div class="post-content">
+      Class of {{p.year}}
+    </div>
+
     <h4>
       <div class="label label-info">
-        Date I joined Trinity Tutor: {{p.created.strftime("%b %d, %Y")}}
+        I joined Trinity Tutor: {{p.created.strftime("%b %d, %Y")}}
       </div>
     </h4>
   </div>
   <hr>
 
   <div class="post-content">
-     I am the empty _render_text in users.html<!-- {{p._render_text | safe}} -->
+
   </div>
 
   
