@@ -39,6 +39,9 @@
           {% block navbar %}
           <li class="active"><a href="/">Home</a></li>
           <li><a href="/newpost">New AFH</a></li>
+          {% if user %}
+            <li><a href="/users/{{user.key().id()}}">Profile</a></li>
+          {% endif %}
           {% endblock %}
         </ul>
         <div class="navbar-form navbar-right">
