@@ -1,5 +1,14 @@
 {% extends "base.html" %}
+    {% block content %}
 
-{% block content %}
-  {{post.render_page() | safe}}
-{% endblock %}
+    <div class="post">
+      
+      <div class="post-heading">
+        <h2>
+            {{u.name}}
+        </h2>
+        <h2>
+            {{u.year}}
+        </h2>
+    </div>
+    {% endblock %}
