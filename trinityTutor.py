@@ -199,63 +199,11 @@ class Post(db.Model):
         self.exchangeContact(user)
 
 
-# class AFH (db.Model):
-#     title = db.StringProperty(required = True)
-#     subject = db.StringProperty(required = True)
-#     difficulty = db.StringProperty(required = True)
-#     owner = db.StringProperty(required = True)
-#     selectedTutor = db.StringProperty()
-#     wage = db.IntegerProperty(required = True)
-#     length = db.StringProperty(required = True)
-#     description = db.StringProperty(required = True)
-#     dateCreated = db.DateTimeProperty(auto_now_add = True)
-
-    #def render(self):
-        #if self.user.name == owner:
-            #render the page so that you have the option to select the best respondent
-            #add a radial button by each name. Make it a form so when you submit, selectTutor is called with value
-        #else:
-            #render normal page where you can add your name to respondees
-            #adding your name first identifies the username that is doing the adding.
-            #that value is passed to selectTutor
-
-    # def exchangeContact(self):
-    #     firstConnection = Connection(title = self.title, otherUser = self.selectedTutor, otherUserEmail = User.by_name(self.selectedTutor).email , parent_user = str(self.user.key().id()))
-    #     firstConnection.put()
-    #     secondConnection = Connection(title = self.title, otherUser = str(self.user.key().id()), otherUserEmail = self.user.email, parent_user = str(User.by_name(self.selectedTutor)))
-    #     secondConnection.put()
-    #     self.response.out.write("This will send you to a page saying that you exchanged contact information with such and such user. Maybe this should redirect to your connections page")
-
-    # def selectTutor(self, selectedTutor):
-    #     selectedTutor = selectedTutor
-    #     self.exchangeContact()
-
-    #This is done in PostPage
-    # def addRespondent(self):
-    #     respondent = self.user.name #make sure this is getting the responder, not owner
-    #     toBeAdded = Respondent(respondent = respondent, parentAFH = str(self.key().id()))
-    #     toBeAdded.put()
-
-    # def displayRespondents(self):
-    #     respondents = Respondent.all().filter('parentAFH =', str(self.key().id())).order('-created')
-    #     return respondents
-
-
 class Respondent(db.Model):
     respondent = db.StringProperty(required = True)
     parentAFH = db.StringProperty()
     userid = db.StringProperty(required = True)
     created = db.DateTimeProperty(auto_now_add = True)
-
-class Front(Handler):
-    def get(self):
-        posts = greetings = Post.all().order('-created')
-        self.render('front.html', posts = posts)
-
-class ShowAllUsers(Handler):
-    def get(self):
-        users = User.all().order('-created')
-        self.render("front.html", posts = users)
 
 class Comment(db.Model):
     content = db.TextProperty(required = True)
@@ -270,6 +218,16 @@ class Connection(db.Model):
     postingTitle = db.StringProperty(required = True)
     created = db.DateTimeProperty(auto_now_add = True)
     parent_user = db.StringProperty(required = True)
+
+class Front(Handler):
+    def get(self):
+        posts = greetings = Post.all().order('-created')
+        self.render('front.html', posts = posts)
+
+class ShowAllUsers(Handler):
+    def get(self):
+        users = User.all().order('-created')
+        self.render("front.html", posts = users)
 
 class ConnectionRedirect(Handler):
     def get(self):
@@ -361,7 +319,6 @@ class PostPage(Handler):
                     comment = Comment(parent = comment_key(), created = created, content = content, author = self.user.name, parent_post = post_id)
                     comment.put()
                 self.redirect('/afh/%s' % post_id)
-
 
 
 class NewPost(Handler):
