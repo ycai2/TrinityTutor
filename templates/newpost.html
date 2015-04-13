@@ -3,6 +3,9 @@
 {% block navbar %}
   <li><a href="/">Home</a></li>
   <li class="active"><a href="/newpost">New AFH</a></li>
+  {% if user %}
+    <li><a href="/users/{{user.key().id()}}">Profile</a></li>
+  {% endif %}
 {% endblock %}
 
 {% block content %}

@@ -1,14 +1,46 @@
 {% extends "base.html" %}
+    {% block navbar %}
+        <li><a href="/">Home</a></li>
+        <li><a href="/newpost">New AFH</a></li>
+        <li class="active"><a href="/users/{{u.key().id()}}">Profile</a></li>
+    {% endblock %}
     {% block content %}
-
-    <div class="post">
-      
-      <div class="post-heading">
-        <h2>
-            {{u.name}}
-        </h2>
-        <h2>
-            {{u.year}}
-        </h2>
+    <div class="">
+        <div class="col-md-6">
+            <table class="table table-striped">
+                <thead>
+                  <tr>
+                    <th>{{u.name}}'s Profile</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>Name</td>
+                    <td>{{u.nickname}}</td>
+                  </tr>
+                  <tr>
+                    <td>Graduation Year</td>
+                    <td>{{u.year}}</td>
+                  </tr>
+                  <tr>
+                    <td>Major</td>
+                    <td>{{u.major}}</td>
+                  </tr>
+                  <tr>
+                    <td>Email</td>
+                    <td>{{u.email}}</td>
+                  </tr>
+                  <tr>
+                    <td>Description</td>
+                    <td>{{u.description}}</td>
+                  </tr>
+                  <tr>
+                    <td>Password</td>
+                    <td>Just kidding :)</td>
+                  </tr>
+                </tbody>
+            </table>
+        </div>
     </div>
     {% endblock %}
