@@ -1,7 +1,7 @@
 <div class="post">
   <div class="post-heading">
     <h2>
-      <a href="/afh/{{p.key().id()}}">{{p.subject}}</a>
+      <a href="/afh/{{p.key().id()}}">{{p.title}}</a>
       
     </h2>
     Posted by
@@ -14,11 +14,33 @@
       </div>
     </h4>
   </div>
-  <hr>
 
   <div class="post-content">
-    {{p._render_text | safe}}
+    Subject: {{p.subject}}
   </div>
+  <h4>
+    <div class="post-content">
+      <font color="green">
+        ${{p.wage}} per hour
+      </font>
+    </div>
+  </h4>
+
+  <div class="post-content">
+    Difficulty: {{p.difficulty}}
+  </div>
+
+  <div class="post-content">
+    Frequency of Meetings: {{p.meetings}}
+  </div>
+
+  {% if p.selectedTutor: %}
+    <div> Selected Tutor: <a href="/users/{{p.selectedTutorID}}">{{p.selectedTutor}} </a> </div>
+  {% endif %}
+
+  {% if not p.selectedTutor: %}
+    <div> No Tutor has been selected yet! </div>
+  {% endif %}
 
   
 </div>
