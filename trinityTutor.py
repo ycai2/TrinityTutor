@@ -146,8 +146,14 @@ def comment_key(name = 'default'):
 
 #Object for Post database
 class Post(db.Model):
+    title = db.StringProperty(required = True)
     subject = db.StringProperty(required = True)
     content = db.TextProperty(required = True)
+
+    wage = db.IntegerProperty(required = True)
+    meetings = db.StringProperty(required = True)
+    difficulty = db.StringProperty(required = True)
+
     author = db.StringProperty(required = True)
     authorID = db.StringProperty(required = True)
     created = db.DateTimeProperty(auto_now_add = True)
@@ -369,17 +375,27 @@ class NewPost(Handler):
         if not self.user:
             self.redirect('/')
         else:
-            subject = self.request.get('subject')
-            content = self.request.get('content')
 
+            title = self.request.get('title')
+            selectedSubject = self.request.get('subjectList')
+            content = self.request.get('content')
+            wage = int(self.request.get('wage'))
+            selectedMeetings = self.request.get('meetingsList')
+            selectedDifficulty = self.request.get('difficultyList')
+
+<<<<<<< HEAD
+            if title and selectedSubject and content and wage and selectedMeetings and selectedDifficulty:
+                p = Post(parent = _key(), title = title, subject = selectedSubject, content = content, wage = wage, meetings = selectedMeetings, difficulty = selectedDifficulty, author = self.user.name)
+=======
             if subject and content:
                 p = Post(parent = _key(), subject = subject, content = content, author = self.user.name, authorID = str(self.user.key().id()))
+>>>>>>> master
                 p.put()
                 self.redirect('/afh/%s' % str(p.key().id()))
             
             else:
-                error = "subject and content, please!"
-                self.render("newpost.html", subject=subject, content=content, error=error)
+                error = "Enter information in the required fields!"
+                self.render("newpost.html", title = title, subject=selectedSubject, content=content, wage = wage, meetings = selectedMeetings, difficulty = selectedDifficulty, error=error)
 
 
 USER_RE = re.compile(r"^[a-zA-Z0-9_-]{3,20}$")

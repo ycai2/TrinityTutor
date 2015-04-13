@@ -10,18 +10,93 @@
   <h2>New AFH</h2>
 
     <form method="post" class="jumbotron">
+
+    <div>
+      <label>
+        <div>Title</div>
+        <input type="text" class="form-control" name="title" value="{{title}}">
+      </label>
+    </div>
+
+    <div>
+
       <label>
         <div>Subject</div>
-        <input type="text" class="form-control" name="subject" value="{{subject}}">
+        <select name="subjectList">
+          <option value="American Studies">American Studies</option>
+          <option value="Anthropology">Anthropology</option>
+          <option value="Art History">Art History</option>
+          <option value="Biochemistry">Biochemistry</option>
+          <option value="Biology">Biology</option>
+          <option value="Chemistry">Chemistry</option>
+          <option value="Classical Studies">Classical Studies</option>
+          <option value="Computer Science">Computer Science</option>
+          <option value="Economics">Economics</option>
+          <option value="Educational Studies">Educational Studies</option>
+          <option value="Engineering">Engineering</option>
+          <option value="English">English</option>
+          <option value="Environmental Studies">Environmental Studies</option>
+          <option value="French Studies">French Studies</option>
+          <option value="German Studies">German Studies</option>
+          <option value="Hispanic Studies">Hispanic Studies</option>
+          <option value="History">History</option>
+          <option value="International Studies">International Studies</option>
+          <option value="Italian Studies">Italian Studies</option>
+          <option value="Mathematics">Mathematics</option>
+          <option value="Music">Music</option>
+          <option value="Neuroscience">Neuroscience</option>
+          <option value="Philosophy">Philosophy</option>
+          <option value="Physics">Physics</option>
+          <option value="Political Science">Political Science</option>
+          <option value="Psychology">Psychology</option>
+          <option value="Public Policy and Law">Public Policy and Law</option>
+          <option value="Jewish Studies">Jewish Studies</option>
+          <option value="Religion">Religion</option>
+          <option value="Russian">Russian</option>
+          <option value="Sociology">Sociology</option>
+          <option value="Studio Arts">Studio Arts</option>        
+          <option value="Theater and Dance">Theater and Dance</option>
+          <option value="Urban Studies">Urban Studies</option>
+          <option value="Women, Gender, and Sexuality">Women, Gender, and Sexuality</option>
+       </select>
       </label>
+    </div>
+
+    <div>
+      <label>
+        <div>Wage (USD)</div>
+        <input type="number" class="form-control" name="wage" value="{{wage}}">
+      </label>
+    </div>
+
+    <div>
+      <label>
+        <div>Meetings</div>
+        <select name="meetingsList">
+          <option value="Once">Once</option>
+          <option value="Seveal">Several</option>
+          <option value="More">More...</option>
+       </select>
+      </label>
+    </div>
+
+    <div>
+      <label>
+        <div>Difficulty</div>
+        <select name="difficultyList">
+          <option value="Easy">Easy</option>
+          <option value="Medium">Medium</option>
+          <option value="Hard">Hard</option>
+          <option value="Very Hard">Very Hard</option>
+       </select>
+      </label>
+    </div>
 
       <div>
         <b>Description</b>
-        
         </div>
       <textarea class="form-control" name="content" rows="10" placeholder="(HTML formatting available)">{{content}}</textarea>
       
-
       <div class="error">{{error}}</div>
       <br><br>
       <input type="submit" class="btn btn-primary">
