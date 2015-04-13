@@ -1,13 +1,11 @@
 <div class="post">
-  
   <div class="post-heading">
     <h2>
-      {{p.subject}}
+      {{p.title}}
     </h2>
-
     <h5>
       Posted by
-      <a href="/users/{{p.key().id()}}" class="label label-warning">
+      <a href="/users/{{p.authorID}}" class="label label-warning">
         {{p.author}}
       </a>&nbsp;
 
@@ -15,27 +13,34 @@
         {{p.created.strftime("%b %d, %Y")}}
       </div>
     </h5>
-
   </div>
   <hr>
-
   <h4>
     <div class="post-content">
       {{p._render_text | safe}}
     </div>
   </h4>
   <hr>
+
+  <hr>
+    <h5>
+    <div>
+     <p> Subject: {{p.subject}}</p>
+    </div>
+     <p> Wage (USD per hour): $ {{p.wage}} </p>
+    </h5>
+
+    <div>
+      <p> Meetings (per week): {{p.meetings}} </p>
+    </div>
+
+    <div>
+      <p> Difficulty: {{p.difficulty}} </p>
+    </div>
+  <hr>
 </div>
 
 {% if not p.selectedTutor: %}
-  <div> LIST OF RESPONDENTS </div>
-  <select>
-  {% for i in respondents %}
-    <option value="{{i.respondent}}"> {{i.respondent}} </option>
-  {% endfor %}
-  </select>
-  <br><br>
-
   <div> Respondent Profiles </div>
   <menu>
     {% set  count = 1 %}
@@ -54,7 +59,7 @@
 {% endif %}
 
 {% if p.selectedTutor: %}
-  <div>Selected Tutor is {{p.selectedTutor}} </div>
+  <div> Selected Tutor: <a href="/users/{{p.selectedTutorID}}">{{p.selectedTutor}} </a> </div>
 {% endif %}
 
 <hr><hr>
