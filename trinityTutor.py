@@ -383,13 +383,8 @@ class NewPost(Handler):
             selectedMeetings = self.request.get('meetingsList')
             selectedDifficulty = self.request.get('difficultyList')
 
-<<<<<<< HEAD
             if title and selectedSubject and content and wage and selectedMeetings and selectedDifficulty:
-                p = Post(parent = _key(), title = title, subject = selectedSubject, content = content, wage = wage, meetings = selectedMeetings, difficulty = selectedDifficulty, author = self.user.name)
-=======
-            if subject and content:
-                p = Post(parent = _key(), subject = subject, content = content, author = self.user.name, authorID = str(self.user.key().id()))
->>>>>>> master
+                p = Post(parent = _key(), title = title, subject = selectedSubject, content = content, wage = wage, meetings = selectedMeetings, difficulty = selectedDifficulty, author = self.user.name, authorID = str(self.user.key().id()))
                 p.put()
                 self.redirect('/afh/%s' % str(p.key().id()))
             
