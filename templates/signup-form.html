@@ -56,7 +56,8 @@
               <input type="text" name="username" value="{{username}}" class="form-control" placeholder="Username" required autofocus>
             </div>
           {% endif %}
-       
+          
+
           {% if error_password %}
             <div id="form-error" class="form-group has-error has-feedback">
               
@@ -85,15 +86,32 @@
 
           {% if error_email %}
             <div id="form-error" class="form-group has-error has-feedback">
-              <input type="text" name="email" value="{{email}}" class="form-control" placeholder="Email (Optional)" autofocus>
+              <input type="text" name="email" value="{{email}}" class="form-control" placeholder="Email" required autofocus>
               <span class="glyphicon glyphicon-remove form-control-feedback" aria-hidden="true"></span>
               <label class="control-label">Has to input correct email format</label>
             </div>
           {% else %}
             <div class="form-group">
-              <input type="text" name="email" value="{{email}}" class="form-control" placeholder="Email (Optional)" autofocus>
+              <input type="text" name="email" value="{{email}}" class="form-control" placeholder="Email" required autofocus>
             </div>
           {% endif %}
+
+          <div class="form-group">
+            <input type="text" name="name" value="{{name}}" class="form-control" placeholder="Your Name" required autofocus>
+          </div>
+
+          <div class="form-group">
+            <input type="number" name="year" value="{{year}}" class="form-control" placeholder="Class Year" required autofocus>
+          </div>
+
+          <div class="form-group">
+            <input type="text" name="major" value="{{major}}" class="form-control" placeholder="Major" required autofocus>
+          </div>
+
+          <div class="form-group">
+            <input type="text" name="description" value="{{description}}" class="form-control" placeholder="Description (Optional)" autofocus>
+          </div>
+
         </div>
         <br>
         <button class="btn btn-lg btn-primary btn-block" type="submit">Submit</button>

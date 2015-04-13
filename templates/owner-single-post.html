@@ -5,9 +5,9 @@
     </h2>
     <h5>
       Posted by
-      <div class="label label-warning">
+      <a href="/users/{{p.authorID}}" class="label label-warning">
         {{p.author}}
-      </div>&nbsp;
+      </a>&nbsp;
 
       <div class="label label-info">
         {{p.created.strftime("%b %d, %Y")}}
@@ -52,11 +52,27 @@
   </select>
     <input type="submit" name="select" class="btn btn-primary" value="Select this Tutor"></input>
     <br><br>
+  <div> Respondent Profiles </div>
+  <menu>
+    {% set  count = 1 %}
+    {% for i in respondents %}
+      <menuitem>
+        <div> {{count}}. </div>
+        <div>  Username: 
+          <a href="/users/{{i.userid}}">{{i.respondent}}</a>
+        </div>
+        <div> User Rating: {{i.rating}} </div>
+      </menuitem>
+      <br>
+      {% set count = count + 1 %}
+    {% endfor %}
+  </menu>
+
 {% endif %}
 </form>
 
 {% if p.selectedTutor: %}
-  <div>Selected Tutor is {{p.selectedTutor}} </div>
+  <div> Selected Tutor: <a href="/users/{{p.selectedTutorID}}">{{p.selectedTutor}} </a> </div>
 {% endif %}
 
 <hr><hr>

@@ -19,6 +19,7 @@ jinja_env = jinja2.Environment(loader = jinja2.FileSystemLoader(template_dir),
 
 secret = 'hiiii'
 
+
 #Global function to render html
 def render_str(template, **params):
     t = jinja_env.get_template(template)
@@ -98,7 +99,11 @@ class User(db.Model):
     name = db.StringProperty(required = True)
     pw_hash = db.StringProperty(required = True)
     created = db.DateTimeProperty(auto_now_add = True)
-    email = db.StringProperty()
+    email = db.StringProperty(required = True)
+    nickname = db.StringProperty(required = True)
+    year = db.IntegerProperty(required = True)
+    major = db.StringProperty(required = True)
+    description = db.StringProperty()
 
     @classmethod
     def by_id(cls, uid):
@@ -110,12 +115,16 @@ class User(db.Model):
         return u
 
     @classmethod
-    def register(cls, name, pw, email = None):
+    def register(cls, name, pw, email, nickname, year, major, description):
         pw_hash = make_pw_hash(name, pw)
         return User(parent = users_key(),
                     name = name,
                     pw_hash = pw_hash,
-                    email = email)
+                    email = email,
+                    nickname = nickname,
+                    year = int(year),
+                    major = major,
+                    description = description)
 
     @classmethod
     def login(cls, name, pw):
@@ -126,6 +135,7 @@ class User(db.Model):
     def render(self):
         # self._render_text = self.content.replace('\n', '<br>')
         return render_str("users.html", p = self)
+
 
 
 def _key(name = 'default'):
@@ -145,10 +155,12 @@ class Post(db.Model):
     difficulty = db.StringProperty(required = True)
 
     author = db.StringProperty(required = True)
+    authorID = db.StringProperty(required = True)
     created = db.DateTimeProperty(auto_now_add = True)
     last_modified = db.DateTimeProperty(auto_now = True)
     #+datetime.timedelta(hours=8)
     selectedTutor = db.StringProperty()
+    selectedTutorID = db.StringProperty()
 
     @classmethod
     def by_id(cls, uid):
@@ -178,9 +190,9 @@ class Post(db.Model):
 
         #change subject to title later
     def exchangeContact(self, user):
-        firstConnection = Connection(postingTitle = self.subject, otherUser = self.selectedTutor, otherUserEmail = User.by_name(self.selectedTutor).email, parent_user = User.by_id(user.key().id()).name)
+        firstConnection = Connection(postingTitle = self.subject, otherUser = self.selectedTutor, otherUserID = str(User.by_name(self.selectedTutor).key().id()), otherUserEmail = User.by_name(self.selectedTutor).email, parent_user = User.by_id(user.key().id()).name)
         firstConnection.put()
-        secondConnection = Connection(postingTitle = self.subject, otherUser = User.by_id(user.key().id()).name, otherUserEmail = User.by_id(user.key().id()).email, parent_user = self.selectedTutor)
+        secondConnection = Connection(postingTitle = self.subject, otherUser = User.by_id(user.key().id()).name, otherUserID = str(user.key().id()), otherUserEmail = User.by_id(user.key().id()).email, parent_user = self.selectedTutor)
         secondConnection.put()
         
     def selectTutor(self, selectedTutor, user):
@@ -232,6 +244,7 @@ class Post(db.Model):
 class Respondent(db.Model):
     respondent = db.StringProperty(required = True)
     parentAFH = db.StringProperty()
+    userid = db.StringProperty(required = True)
     created = db.DateTimeProperty(auto_now_add = True)
 
 class Front(Handler):
@@ -252,6 +265,7 @@ class Comment(db.Model):
 
 class Connection(db.Model):
     otherUser = db.StringProperty(required = True)
+    otherUserID = db.StringProperty(required = True)
     otherUserEmail = db.StringProperty(required = True)
     postingTitle = db.StringProperty(required = True)
     created = db.DateTimeProperty(auto_now_add = True)
@@ -264,14 +278,24 @@ class ConnectionRedirect(Handler):
         else:
             self.redirect('/login')
 
+class ShowMyAccount(Handler):
+    def get(self):
+        if self.user:
+            self.redirect('users/%s' % str(self.user.key().id()))
+        else:
+            self.redirect('/login')
+
 class ConnectionsPage(Handler):
     def get(self, user_id):
-        if self.user.key().id() == int(user_id):
-            username = User.by_id(int(user_id)).name
-            connections = Connection.all().filter('parent_user =',username).order('-created')
-            self.render("connections.html", p = self, connections = connections)
+        if self.user:
+            if self.user.key().id() == int(user_id):
+                username = User.by_id(int(user_id)).name
+                connections = Connection.all().filter('parent_user =',username).order('-created')
+                self.render("connections.html", p = self, connections = connections)
+            else:
+                self.redirect('/')
         else:
-            self.redirect('/')
+            self.redirect('/login')
 
 class PostPage(Handler):
     def get(self, post_id):
@@ -301,6 +325,7 @@ class PostPage(Handler):
             if selected:
                 thisAFH = Post.by_id(int(post_id))
                 thisAFH.selectedTutor = selected
+                thisAFH.selectedTutorID = str(User.by_name(selected).key().id())
                 thisAFH.put()
                 thisAFH.selectTutor(selected, self.user)
                 self.redirect('/connections')
@@ -317,7 +342,7 @@ class PostPage(Handler):
             if alreadyAppliedFlag:
                 self.redirect('/afh/%s' % post_id)
             else:
-                toBeAdded = Respondent(respondent = respondent, parentAFH = str(post_id))
+                toBeAdded = Respondent(respondent = respondent, parentAFH = str(post_id), userid = str(User.by_name(respondent).key().id()))
                 toBeAdded.put()
                 self.redirect('/afh/%s' % post_id)
 
@@ -336,6 +361,8 @@ class PostPage(Handler):
                     comment = Comment(parent = comment_key(), created = created, content = content, author = self.user.name, parent_post = post_id)
                     comment.put()
                 self.redirect('/afh/%s' % post_id)
+
+
 
 class NewPost(Handler):
     def get(self):
@@ -356,8 +383,13 @@ class NewPost(Handler):
             selectedMeetings = self.request.get('meetingsList')
             selectedDifficulty = self.request.get('difficultyList')
 
+<<<<<<< HEAD
             if title and selectedSubject and content and wage and selectedMeetings and selectedDifficulty:
                 p = Post(parent = _key(), title = title, subject = selectedSubject, content = content, wage = wage, meetings = selectedMeetings, difficulty = selectedDifficulty, author = self.user.name)
+=======
+            if subject and content:
+                p = Post(parent = _key(), subject = subject, content = content, author = self.user.name, authorID = str(self.user.key().id()))
+>>>>>>> master
                 p.put()
                 self.redirect('/afh/%s' % str(p.key().id()))
             
@@ -388,9 +420,18 @@ class Signup(Handler):
         self.password = self.request.get('password')
         self.verify = self.request.get('verify')
         self.email = self.request.get('email')
+        self.name = self.request.get('name')
+        self.year = self.request.get('year')
+        self.major = self.request.get('major')
+        self.description = self.request.get('description')
+
 
         params = dict(username = self.username,
-                      email = self.email)
+                      email = self.email,
+                      name = self.name,
+                      year = self.year,
+                      major = self.major,
+                      description = self.description)
 
         if not valid_username(self.username):
             params['error_username'] = "That's not a valid username."
@@ -399,6 +440,7 @@ class Signup(Handler):
         if not valid_password(self.password):
             params['error_password'] = "Password has to be at least 3 character/numbers"
             have_error = True
+            
         elif self.password != self.verify:
             params['error_verify'] = "Your passwords didn't match."
             have_error = True
@@ -406,6 +448,8 @@ class Signup(Handler):
         if not valid_email(self.email):
             params['error_email'] = "That's not a valid email."
             have_error = True
+
+
 
         if have_error:
             self.render('signup-form.html', **params)
@@ -422,10 +466,18 @@ class Register(Signup):
             msg = 'That user already exists.'
             self.render('signup-form.html', error_username = msg)
         else:
-            u = User.register(self.username, self.password, self.email)
+            u = User.register(self.username, self.password, self.email, self.name, self.year, self.major, self.description)
             u.put()
             self.login(u)
             self.redirect('/')
+
+class Profile(Handler):
+    def get(self, user_id):
+        user = User.by_id(int(user_id))
+        if not self.user:
+            self.redirect("/login")
+        else:
+            self.render("profile.html", u = user)
 
 class Login(Handler):
     def get(self):
@@ -463,9 +515,10 @@ app = webapp2.WSGIApplication([('/', Front),
                                ('/login', Login),
                                ('/logout', Logout),
                                ('/welcome', Welcome),
-                               #('/myaccount', ShowMyAccount)
+                               ('/myaccount', ShowMyAccount),
                                ('/users', ShowAllUsers),
                                ('/connections', ConnectionRedirect),
-                               ('/connections/([0-9]+)(?:.json)?', ConnectionsPage)
+                               ('/connections/([0-9]+)(?:.json)?', ConnectionsPage),
+                               ('/users/([0-9]+)(?:.json)?', Profile)
                                ],
                               debug=True)
