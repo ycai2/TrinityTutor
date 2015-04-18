@@ -56,15 +56,10 @@
 
 
 <div> LIST OF COMMENTS </div>
-{% for i in comments %}
+<br>
+{{commentText | safe}}
+<br>
 
-<div class="panel panel-default">
-  <div class="panel-heading"> {{i.author}} {{i.created.strftime("%H:%M:%S, %b %d, %Y")}}</div>
-  <div class="panel-body">
-    {{i.content | safe}}
-  </div>
-</div>
-{% endfor %}
 
 <form method="post" class="jumbotron">
   {% if not p.selectedTutor: %}

@@ -104,7 +104,11 @@ class User(db.Model):
     year = db.IntegerProperty(required = True)
     major = db.StringProperty(required = True)
     description = db.StringProperty()
+
     feedbackList = db.ListProperty(str, indexed = True, default=[])
+    connectionList = db.ListProperty(str, indexed = True, default=[])
+    appliedList = db.ListProperty(str, indexed = True, default=[])
+    createdList = db.ListProperty(str, indexed = True, default=[])
 
     @classmethod
     def by_id(cls, uid):
@@ -141,13 +145,8 @@ class User(db.Model):
         return render_str("singleRespondent.html", user = self)
 
 
-
-
 def _key(name = 'default'):
     return db.Key.from_path('s', name)
-
-def comment_key(name = 'default'):
-    return db.Key.from_path('comments', name)
 
 #Object for Post database
 class Post(db.Model):
@@ -173,6 +172,8 @@ class Post(db.Model):
     respondentNameList = db.ListProperty(str, indexed = True, default=[])
     respondentIDList = db.ListProperty(str, indexed = True, default=[])
 
+    commentIDList = db.ListProperty(str, indexed = True, default=[])
+
     @classmethod
     def by_id(cls, uid):
         return Post.get_by_id(uid, parent = _key())
@@ -191,17 +192,18 @@ class Post(db.Model):
             if respondent:
                 respondentText += respondent.renderRespondent()
 
+        commentIDList = self.commentIDList
+        commentText = ""
+        for commentID in commentIDList:
+            comment = Comment.get_by_id(int(commentID))
+            if comment:
+                commentText += comment.render()
 
-
-        comments = Comment.all().filter('parent_post =', str(self.key().id())).order('-created')
-
-        ##CREATE RESPONDENT TEXT
-        return render_str("single-post.html", p = self, comments = comments, respondentNameList = self.respondentNameList, respondentText = respondentText)
+        return render_str("single-post.html", p = self, commentText = commentText, respondentNameList = self.respondentNameList, respondentText = respondentText)
 
     def render_ownerPage(self):
         self._render_text = self.content.replace('\n', '<br>')
         #print self.created.now()-datetime.timedelta(hours=5)
-        ##CREATE RESPONDENT TEXT
         respondentIDList = self.respondentIDList
         respondentText = ""
         for respondentID in respondentIDList:
@@ -209,24 +211,30 @@ class Post(db.Model):
             if respondent:
                 respondentText += respondent.renderRespondent()
 
-        comments = Comment.all().filter('parent_post =', str(self.key().id())).order('-created')
-        return render_str("owner-single-post.html", p = self, comments = comments, respondentNameList = self.respondentNameList, respondentText = respondentText)
+        commentIDList = self.commentIDList
+        commentText = ""
+        for commentID in commentIDList:
+            comment = Comment.get_by_id(int(commentID))
+            if comment:
+                commentText += comment.render()
+       
+        return render_str("owner-single-post.html", p = self, commentText = commentText, respondentNameList = self.respondentNameList, respondentText = respondentText)
 
-        #change subject to title later
     def exchangeContact(self, user):
         selectedTutor = User.by_name(self.selectedTutor)
         selectedTutorID = selectedTutor.key().id()
         userID = user.key().id()
-        firstConnection = Connection(postingTitle = self.subject, otherUser = self.selectedTutor, otherUserID = str(selectedTutorID), otherUserEmail = selectedTutor.email, parent_user = user.name)
+        firstConnection = Connection(otherUserID = str(selectedTutorID), AFHID = str(self.key().id()))
         firstConnection.put()
-        secondConnection = Connection(postingTitle = self.subject, otherUser = user.name, otherUserID = str(userID), otherUserEmail = user.email, parent_user = self.selectedTutor)
+        user.connectionList.append(str(firstConnection.key().id()))
+        user.put()
+        secondConnection = Connection(otherUserID = str(userID), AFHID = str(self.key().id()))
         secondConnection.put()
+        selectedTutor.connectionList.append(str(secondConnection.key().id()))
+        selectedTutor.put()
         
-    def selectTutor(self, selectedTutor, user):
+    def selectTutor(self, user):
         self.exchangeContact(user)
-
-def feedback_key(name = 'default'):
-    return db.Key.from_path('feedbacks', name)
 
 class Feedback(db.Model):
     receiverID = db.StringProperty(required = True)
@@ -236,10 +244,6 @@ class Feedback(db.Model):
     comment = db.StringProperty()
     created = db.DateTimeProperty(auto_now_add = True)
 
-    @classmethod
-    def by_id(cls, uid):
-        return Feedback.get_by_id(uid, parent = feedback_key())
-
     def render(self):
         return render_str("singleFeedback.html", feedback = self, receiver = User.by_id(int(self.receiverID)), writer = User.by_id(int(self.writerID)), AFH = Post.by_id(int(self.AFHID)))
 
@@ -247,15 +251,17 @@ class Comment(db.Model):
     content = db.TextProperty(required = True)
     author = db.StringProperty(required = True)
     created = db.DateTimeProperty(auto_now_add = True)
-    parent_post = db.TextProperty(required = True)
+
+    def render(self):
+        return render_str("singleComment.html", comment = self)
 
 class Connection(db.Model):
-    otherUser = db.StringProperty(required = True)
     otherUserID = db.StringProperty(required = True)
-    otherUserEmail = db.StringProperty(required = True)
-    postingTitle = db.StringProperty(required = True)
+    AFHID = db.StringProperty(required = True)
     created = db.DateTimeProperty(auto_now_add = True)
-    parent_user = db.StringProperty(required = True)
+
+    def render(self):
+        return render_str("singleConnection.html", connection = self, user = User.by_id(int(self.otherUserID)), AFH = Post.by_id(int(self.AFHID)))
 
 class Front(Handler):
     def get(self):
@@ -285,9 +291,15 @@ class ConnectionsPage(Handler):
     def get(self, user_id):
         if self.user:
             if self.user.key().id() == int(user_id):
-                username = User.by_id(int(user_id)).name
-                connections = Connection.all().filter('parent_user =',username).order('-created')
-                self.render("connections.html", p = self, connections = connections)
+                user = User.by_id(int(user_id))
+                connectionList = user.connectionList
+                connectionText = ""
+                print connectionList
+                for connectionID in connectionList:
+                    connection = Connection.get_by_id(int(connectionID))
+                    if connection:
+                        connectionText += connection.render()
+                self.render("connections.html", p = self, connectionText = connectionText)
             else:
                 self.redirect('/')
         else:
@@ -376,7 +388,7 @@ class PostPage(Handler):
                 thisAFH.selectedTutor = selected
                 thisAFH.selectedTutorID = str(User.by_name(selected).key().id())
                 thisAFH.put()
-                thisAFH.selectTutor(selected, self.user)
+                thisAFH.selectTutor(self.user)
                 self.redirect('/connections')
             else:
                 self.redirect('/')
@@ -398,8 +410,6 @@ class PostPage(Handler):
 
         else:
             content = self.request.get('content').replace('\n', '<br>')
-            key = db.Key.from_path('Post', int(post_id), parent=_key())
-            post = db.get(key)
 
             if not post:
                 self.error(404)
@@ -408,8 +418,10 @@ class PostPage(Handler):
             else:
                 if content:
                     created = datetime.now() - timedelta(hours=5)
-                    comment = Comment(parent = comment_key(), created = created, content = content, author = self.user.name, parent_post = post_id)
+                    comment = Comment(created = created, content = content, author = self.user.name)
                     comment.put()
+                    post.commentIDList.append(str(comment.key().id()))
+                    post.put()
                 self.redirect('/afh/%s' % post_id)
 
 
@@ -424,7 +436,6 @@ class NewPost(Handler):
         if not self.user:
             self.redirect('/')
         else:
-
             title = self.request.get('title')
             selectedSubject = self.request.get('subjectList')
             content = self.request.get('content')
@@ -521,7 +532,6 @@ class Profile(Handler):
         if not self.user:
             self.redirect("/login")
         else:
-
             feedbacks = user.feedbackList
             feedbackText = ""
             for thing in feedbacks:
