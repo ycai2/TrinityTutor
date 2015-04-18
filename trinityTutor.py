@@ -282,62 +282,52 @@ class ConnectionsPage(Handler):
         else:
             self.redirect('/login')
 
+
 class FeedbackPage(Handler):
     def get(self, post_id):
         post = Post.by_id(int(post_id))
 
         if post.selectedTutor:
             if self.user.key().id() == int(post.selectedTutorID):
-                print "hello selected tutor yee"
-                print post.feedbackOnTutee
                 if post.feedbackOnTutee:
-                    print "You already did this Tutee"
                     self.redirect('/')
                 else:
                     self.render("submitFeedback.html", post = post)
-                #render feedback render_page
             elif self.user.key().id() == int(post.authorID):
                 if post.feedbackOnTutor:
-                    print "You already did this Author"
                     self.redirect('/')
                 else:
-                    print "hello author"
-                self.render("submitFeedback.html", post = post)
+                    self.render("submitFeedback.html", post = post)
         else:
             print "you do not have permission to view this page"
 
     def post(self, post_id):
         post = Post.by_id(int(post_id))
+        rating = int(self.request.get('rating'))
+        comment = self.request.get('comment')
 
-        if not self.user:
-            self.redirect('/login')
-        else:
-            rating = int(self.request.get('rating'))
-            comment = self.request.get('comment')
+        if rating:
+            if self.user.name == post.author:
+                f = Feedback(receiver = post.selectedTutor, receiverID = post.selectedTutorID, writer = self.user.name, writerID = str(self.user.key().id()), AFHID = str(post_id), AFHTitle = post.title, AFHSubject = post.subject, AFHDifficulty = post.difficulty, rating = rating, comment = comment)
+                f.put()
+                user = User.by_id(int(post.selectedTutorID))
+                user.feedbackList.append(str(f.key().id()))
+                user.put()
+                post.feedbackOnTutor = True
+                post.put()
 
-            if rating:
-                if self.user.name == post.author:
-                    f = Feedback(receiver = post.selectedTutor, receiverID = post.selectedTutorID, writer = self.user.name, writerID = str(self.user.key().id()), AFHID = str(post_id), AFHTitle = post.title, AFHSubject = post.subject, AFHDifficulty = post.difficulty, rating = rating, comment = comment)
-                    f.put()
-                    user = User.by_id(int(post.selectedTutorID))
-                    user.feedbackList.append(str(f.key().id()))
-                    user.put()
-                    post.feedbackOnTutor = True
-                    post.put()
-                    #feedback should be attached to each user for speed
-                    #fix this later. create an array for each user and add this feedback to that user?
-                else:
-                    f = Feedback(receiver = post.author, receiverID = post.authorID, writer = post.selectedTutor, writerID = post.selectedTutorID, AFHID = str(post_id), AFHTitle = post.title, AFHSubject = post.subject, AFHDifficulty = post.difficulty, rating = rating, comment = comment)
-                    f.put()
-                    user = User.by_id(int(post.authorID))
-                    user.feedbackList.append(str(f.key().id()))
-                    user.put()
-                    post.feedbackOnTutee = True
-                    post.put()
-                self.redirect('/')
             else:
-                print "You must submit a rating"
-                #fix this later
+                f = Feedback(receiver = post.author, receiverID = post.authorID, writer = post.selectedTutor, writerID = post.selectedTutorID, AFHID = str(post_id), AFHTitle = post.title, AFHSubject = post.subject, AFHDifficulty = post.difficulty, rating = rating, comment = comment)
+                f.put()
+                user = User.by_id(int(post.authorID))
+                user.feedbackList.append(str(f.key().id()))
+                user.put()
+                post.feedbackOnTutee = True
+                post.put()
+            self.redirect('/')
+        else:
+            print "You must submit a rating"
+            #fix this later
 
 class PostPage(Handler):
     def get(self, post_id):
@@ -351,15 +341,13 @@ class PostPage(Handler):
             self.redirect("/login")
         else:
             if post.selectedTutor:
-                if self.user.key().id() == int(post.selectedTutorID):
-                    self.redirect('/feedback/%s' % post_id)
-                elif self.user.key().id() == int(post.authorID):
-                    self.redirect('/feedback/%s' % post_id)
+                if ((self.user.key().id() == int(post.selectedTutorID)) or (self.user.key().id() == int(post.authorID))):
+                    self.render("feedbackOption.html", p = post)
+                else:
+                    self.render("permalink.html", post = post)
             elif self.user.name == Post.by_id(int(post_id)).author:
-                print "HALSKDJALSKDJAasd134234523454325S"
                 self.render("ownerPermalink.html", post = post)
             else:
-                print "HALSKDJALSKDJAS"
                 self.render("permalink.html", post = post)
 
     def post(self, post_id):
