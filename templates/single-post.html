@@ -42,20 +42,10 @@
 
 {% if not p.selectedTutor: %}
   <div> Respondent Profiles </div>
-  <menu>
-    {% set  count = 1 %}
-    {% for i in respondents %}
-      <menuitem>
-        <div> {{count}}. </div>
-        <div>  Username: 
-          <a href="/users/{{i.userid}}">{{i.respondent}}</a>
-        </div>
-        <div> User Rating: {{i.rating}} </div>
-      </menuitem>
-      <br>
-      {% set count = count + 1 %}
-    {% endfor %}
-  </menu>
+  <br>
+
+  {{respondentText | safe}}
+
 {% endif %}
 
 {% if p.selectedTutor: %}

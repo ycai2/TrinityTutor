@@ -137,6 +137,10 @@ class User(db.Model):
         # self._render_text = self.content.replace('\n', '<br>')
         return render_str("users.html", p = self)
 
+    def renderRespondent(self):
+        return render_str("singleRespondent.html", user = self)
+
+
 
 
 def _key(name = 'default'):
@@ -166,7 +170,8 @@ class Post(db.Model):
     feedbackOnTutee = db.BooleanProperty()
     feedbackOnTutor = db.BooleanProperty()
 
-    respondentList = db.ListProperty(str, indexed = True, default=[])
+    respondentNameList = db.ListProperty(str, indexed = True, default=[])
+    respondentIDList = db.ListProperty(str, indexed = True, default=[])
 
     @classmethod
     def by_id(cls, uid):
@@ -176,23 +181,36 @@ class Post(db.Model):
         self._render_text = self.content.replace('\n', '<br>')
         return render_str("post.html", p = self)
 
-    def displayRespondents(self):
-        respondents = Respondent.all().filter('parentAFH =', str(self.key().id())).order('-created')
-        return respondents
-
     def render_page(self):
         self._render_text = self.content.replace('\n', '<br>')
         #print self.created.now()-datetime.timedelta(hours=5)
-        respondents = self.displayRespondents()
+        respondentIDList = self.respondentIDList
+        respondentText = ""
+        for respondentID in respondentIDList:
+            respondent = User.by_id(int(respondentID))
+            if respondent:
+                respondentText += respondent.renderRespondent()
+
+
+
         comments = Comment.all().filter('parent_post =', str(self.key().id())).order('-created')
-        return render_str("single-post.html", p = self, comments = comments, respondents = respondents)
+
+        ##CREATE RESPONDENT TEXT
+        return render_str("single-post.html", p = self, comments = comments, respondentNameList = self.respondentNameList, respondentText = respondentText)
 
     def render_ownerPage(self):
         self._render_text = self.content.replace('\n', '<br>')
         #print self.created.now()-datetime.timedelta(hours=5)
-        respondents = self.displayRespondents()
+        ##CREATE RESPONDENT TEXT
+        respondentIDList = self.respondentIDList
+        respondentText = ""
+        for respondentID in respondentIDList:
+            respondent = User.by_id(int(respondentID))
+            if respondent:
+                respondentText += respondent.renderRespondent()
+
         comments = Comment.all().filter('parent_post =', str(self.key().id())).order('-created')
-        return render_str("owner-single-post.html", p = self, comments = comments, respondents = respondents)
+        return render_str("owner-single-post.html", p = self, comments = comments, respondentNameList = self.respondentNameList, respondentText = respondentText)
 
         #change subject to title later
     def exchangeContact(self, user):
@@ -206,13 +224,6 @@ class Post(db.Model):
         
     def selectTutor(self, selectedTutor, user):
         self.exchangeContact(user)
-
-
-class Respondent(db.Model):
-    respondent = db.StringProperty(required = True)
-    parentAFH = db.StringProperty()
-    userid = db.StringProperty(required = True)
-    created = db.DateTimeProperty(auto_now_add = True)
 
 def feedback_key(name = 'default'):
     return db.Key.from_path('feedbacks', name)
@@ -331,8 +342,7 @@ class FeedbackPage(Handler):
 
 class PostPage(Handler):
     def get(self, post_id):
-        key = db.Key.from_path('Post', int(post_id), parent=_key())
-        post = db.get(key)
+        post = Post.by_id(int(post_id))
 
         if not post:
             self.error(404)
@@ -353,7 +363,9 @@ class PostPage(Handler):
     def post(self, post_id):
         if not self.user:
             self.redirect('/')
-        
+
+        post = Post.by_id(int(post_id))
+
         isApply = self.request.get('apply')
         isSelect = self.request.get('select')
 
@@ -372,15 +384,16 @@ class PostPage(Handler):
         elif isApply:
             respondent = self.user.name
             alreadyAppliedFlag = False
-            respondents = Respondent.all().filter('parentAFH =', str(post_id)).order('-created')
-            for each in respondents:
-                if each.respondent == respondent:
+
+            for name in post.respondentNameList:
+                if name == respondent:
                     alreadyAppliedFlag = True
             if alreadyAppliedFlag:
                 self.redirect('/afh/%s' % post_id)
             else:
-                toBeAdded = Respondent(respondent = respondent, parentAFH = str(post_id), userid = str(User.by_name(respondent).key().id()))
-                toBeAdded.put()
+                post.respondentNameList.append(respondent)
+                post.respondentIDList.append(str(self.user.key().id()))
+                post.put()
                 self.redirect('/afh/%s' % post_id)
 
         else:
