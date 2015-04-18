@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+  {% for feedback in feedbacks %}
+    <div class="jumbotron">{{feedback.render() | safe }}</div>
+    <br><br>
+  {% endfor %}
+
+{% endblock %}

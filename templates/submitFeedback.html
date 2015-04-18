@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block navbar %}
+  <li><a href="/">Home</a></li>
+  <li class="active"><a href="/newpost">New Post</a></li>
+  {% if user %}
+    <li><a href="/users/{{user.key().id()}}">Profile</a></li>
+  {% endif %}
+{% endblock %}
+
+{% block content %}
+
+  <h2>Give Feedback</h2>
+    <a href="/afh/{{post.key().id()}}"> {{post.title}} </a>
+
+    <form method="post" class="jumbotron">
+
+      <div>
+        <label>
+          <div>Rating (5 = best, 1 = worst)</div>
+          <select name="rating">
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+         </select>
+        </label>
+      </div>
+
+      <div>
+        <b>Comments? (optional)</b>
+        </div>
+      <textarea class="form-control" name="comment" rows="10" placeholder="(HTML formatting available)">{{comment}}</textarea>
+      
+      <div class="error">{{error}}</div>
+      <br><br>
+      <input type="submit" class="btn btn-primary">
+    </form>
+
+{% endblock %}

@@ -1,0 +1,26 @@
+<div class="post">
+  <div class="post-heading">
+    <h2>
+      <a href="/afh/{{feedback.AFHID}}">{{feedback.AFHtitle}}</a>
+      
+    </h2>
+    Feedback from
+    <a href="/users/{{feedback.writerID}}" class="label label-warning">
+      {{feedback.writer}}
+    </a>
+    <h4>
+      <div class="label label-info">
+        {{feedback.created.strftime("%b %d, %Y")}}
+      </div>
+    </h4>
+  </div>
+
+  <div class="post-content">
+    Subject: {{feedback.AFHSubject}}
+  </div>
+
+  <div class="post-content">
+    Difficulty: {{feedback.AFHDifficulty}}
+  </div>
+  
+</div>
