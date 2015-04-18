@@ -329,7 +329,7 @@ class FeedbackPage(Handler):
                 else:
                     f = Feedback(receiver = post.author, receiverID = post.authorID, writer = post.selectedTutor, writerID = post.selectedTutorID, AFHID = str(post_id), AFHTitle = post.title, AFHSubject = post.subject, AFHDifficulty = post.difficulty, rating = rating, comment = comment)
                     f.put()
-                    user = User.by_id(self.user.key().id())
+                    user = User.by_id(int(post.authorID))
                     user.feedbackList.append(str(f.key().id()))
                     user.put()
                     post.feedbackOnTutee = True
@@ -527,7 +527,8 @@ class Profile(Handler):
             feedbackText = ""
             for thing in feedbacks:
                 each = Feedback.get_by_id(int(thing))
-                feedbackText += each.render()
+                if each:
+                    feedbackText += each.render()
 
             self.render("profile.html", u = user, feedbacks = feedbackText)
 
