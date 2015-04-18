@@ -166,6 +166,8 @@ class Post(db.Model):
     feedbackOnTutee = db.BooleanProperty()
     feedbackOnTutor = db.BooleanProperty()
 
+    respondentList = db.ListProperty(str, indexed = True, default=[])
+
     @classmethod
     def by_id(cls, uid):
         return Post.get_by_id(uid, parent = _key())
@@ -194,9 +196,12 @@ class Post(db.Model):
 
         #change subject to title later
     def exchangeContact(self, user):
-        firstConnection = Connection(postingTitle = self.subject, otherUser = self.selectedTutor, otherUserID = str(User.by_name(self.selectedTutor).key().id()), otherUserEmail = User.by_name(self.selectedTutor).email, parent_user = User.by_id(user.key().id()).name)
+        selectedTutor = User.by_name(self.selectedTutor)
+        selectedTutorID = selectedTutor.key().id()
+        userID = user.key().id()
+        firstConnection = Connection(postingTitle = self.subject, otherUser = self.selectedTutor, otherUserID = str(selectedTutorID), otherUserEmail = selectedTutor.email, parent_user = user.name)
         firstConnection.put()
-        secondConnection = Connection(postingTitle = self.subject, otherUser = User.by_id(user.key().id()).name, otherUserID = str(user.key().id()), otherUserEmail = User.by_id(user.key().id()).email, parent_user = self.selectedTutor)
+        secondConnection = Connection(postingTitle = self.subject, otherUser = user.name, otherUserID = str(userID), otherUserEmail = user.email, parent_user = self.selectedTutor)
         secondConnection.put()
         
     def selectTutor(self, selectedTutor, user):
@@ -213,14 +218,9 @@ def feedback_key(name = 'default'):
     return db.Key.from_path('feedbacks', name)
 
 class Feedback(db.Model):
-    receiver = db.StringProperty(required = True)
     receiverID = db.StringProperty(required = True)
-    writer = db.StringProperty(required = True)
     writerID = db.StringProperty(required = True)
     AFHID = db.StringProperty(required = True)
-    AFHTitle = db.StringProperty(required = True)
-    AFHSubject = db.StringProperty(required = True)
-    AFHDifficulty = db.StringProperty(required = True)
     rating = db.IntegerProperty(required = True)
     comment = db.StringProperty()
     created = db.DateTimeProperty(auto_now_add = True)
@@ -230,7 +230,7 @@ class Feedback(db.Model):
         return Feedback.get_by_id(uid, parent = feedback_key())
 
     def render(self):
-        return render_str("singleFeedback.html", feedback = self)
+        return render_str("singleFeedback.html", feedback = self, receiver = User.by_id(int(self.receiverID)), writer = User.by_id(int(self.writerID)), AFH = Post.by_id(int(self.AFHID)))
 
 class Comment(db.Model):
     content = db.TextProperty(required = True)
@@ -308,7 +308,7 @@ class FeedbackPage(Handler):
 
         if rating:
             if self.user.name == post.author:
-                f = Feedback(receiver = post.selectedTutor, receiverID = post.selectedTutorID, writer = self.user.name, writerID = str(self.user.key().id()), AFHID = str(post_id), AFHTitle = post.title, AFHSubject = post.subject, AFHDifficulty = post.difficulty, rating = rating, comment = comment)
+                f = Feedback(receiverID = post.selectedTutorID, writerID = str(self.user.key().id()), AFHID = str(post_id), rating = rating, comment = comment)
                 f.put()
                 user = User.by_id(int(post.selectedTutorID))
                 user.feedbackList.append(str(f.key().id()))
@@ -317,7 +317,7 @@ class FeedbackPage(Handler):
                 post.put()
 
             else:
-                f = Feedback(receiver = post.author, receiverID = post.authorID, writer = post.selectedTutor, writerID = post.selectedTutorID, AFHID = str(post_id), AFHTitle = post.title, AFHSubject = post.subject, AFHDifficulty = post.difficulty, rating = rating, comment = comment)
+                f = Feedback(receiverID = post.authorID, writerID = post.selectedTutorID, AFHID = str(post_id), rating = rating, comment = comment)
                 f.put()
                 user = User.by_id(int(post.authorID))
                 user.feedbackList.append(str(f.key().id()))
@@ -510,8 +510,6 @@ class Profile(Handler):
         else:
 
             feedbacks = user.feedbackList
-            print "feed back is "
-            print feedbacks
             feedbackText = ""
             for thing in feedbacks:
                 each = Feedback.get_by_id(int(thing))
