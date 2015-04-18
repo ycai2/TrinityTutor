@@ -104,6 +104,8 @@ class User(db.Model):
     year = db.IntegerProperty(required = True)
     major = db.StringProperty(required = True)
     description = db.StringProperty()
+    rating = db.FloatProperty()
+    numberJobs = db.IntegerProperty(required = True)
 
     feedbackList = db.ListProperty(str, indexed = True, default=[])
     connectionList = db.ListProperty(str, indexed = True, default=[])
@@ -129,13 +131,22 @@ class User(db.Model):
                     nickname = nickname,
                     year = int(year),
                     major = major,
-                    description = description)
+                    description = description,
+                    rating = 0.0,
+                    numberJobs = 0)
 
     @classmethod
     def login(cls, name, pw):
         u = cls.by_name(name)
         if u and valid_pw(name, pw, u.pw_hash):
             return u
+
+    def calculateRating(self, newRate):
+        thisUser = self
+        oldRating = thisUser.numberJobs * thisUser.rating
+        thisUser.numberJobs = thisUser.numberJobs + 1
+        thisUser.rating = (oldRating + newRate)/thisUser.numberJobs
+        thisUser.put()
 
     def render(self):
         # self._render_text = self.content.replace('\n', '<br>')
@@ -370,6 +381,7 @@ class FeedbackPage(Handler):
                 user = User.by_id(int(post.selectedTutorID))
                 user.feedbackList.append(str(f.key().id()))
                 user.put()
+                user.calculateRating(rating)
                 post.feedbackOnTutor = True
                 post.put()
 
@@ -379,6 +391,7 @@ class FeedbackPage(Handler):
                 user = User.by_id(int(post.authorID))
                 user.feedbackList.append(str(f.key().id()))
                 user.put()
+                user.calculateRating(rating)
                 post.feedbackOnTutee = True
                 post.put()
             self.redirect('/')
