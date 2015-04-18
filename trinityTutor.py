@@ -144,6 +144,24 @@ class User(db.Model):
     def renderRespondent(self):
         return render_str("singleRespondent.html", user = self)
 
+    def renderCreated(self):
+        createdList = self.createdList
+        createdText = ""
+        for postID in createdList:
+            post = Post.by_id(int(postID))
+            if post:
+                createdText += post.render()
+        return createdText
+
+    def renderApplied(self):
+        appliedList = self.appliedList
+        aplliedText = ""
+        for postID in appliedList:
+            post = Post.by_id(int(postID))
+            if post:
+                aplliedText += post.render()
+        return aplliedText
+
 
 def _key(name = 'default'):
     return db.Key.from_path('s', name)
@@ -262,6 +280,22 @@ class Connection(db.Model):
 
     def render(self):
         return render_str("singleConnection.html", connection = self, user = User.by_id(int(self.otherUserID)), AFH = Post.by_id(int(self.AFHID)))
+
+class Created(Handler):
+    def get(self):
+        if self.user:
+            createdText = self.user.renderCreated()
+            self.render("createdPosts.html", createdText = createdText)
+        else:
+            self.redirect('/login')
+
+class Applied(Handler):
+    def get(self):
+        if self.user:
+            appliedText = self.user.renderApplied()
+            self.render("appliedPosts.html", appliedText = appliedText)
+        else:
+            self.redirect('/login')
 
 class Front(Handler):
     def get(self):
@@ -406,6 +440,10 @@ class PostPage(Handler):
                 post.respondentNameList.append(respondent)
                 post.respondentIDList.append(str(self.user.key().id()))
                 post.put()
+
+                self.user.appliedList.append(str(post.key().id()))
+                self.user.put()
+
                 self.redirect('/afh/%s' % post_id)
 
         else:
@@ -446,6 +484,10 @@ class NewPost(Handler):
             if title and selectedSubject and content and wage and selectedMeetings and selectedDifficulty:
                 p = Post(parent = _key(), title = title, subject = selectedSubject, content = content, wage = wage, meetings = selectedMeetings, difficulty = selectedDifficulty, author = self.user.name, authorID = str(self.user.key().id()))
                 p.put()
+
+                self.user.createdList.append(str(p.key().id()))
+                self.user.put()
+
                 self.redirect('/afh/%s' % str(p.key().id()))
             
             else:
@@ -579,6 +621,8 @@ app = webapp2.WSGIApplication([('/', Front),
                                ('/logout', Logout),
                                ('/welcome', Welcome),
                                ('/myaccount', ShowMyAccount),
+                               ('/created', Created),
+                               ('/applied', Applied),
                                ('/users', ShowAllUsers),
                                ('/connections', ConnectionRedirect),
                                ('/connections/([0-9]+)(?:.json)?', ConnectionsPage),
