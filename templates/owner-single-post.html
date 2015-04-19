@@ -9,6 +9,9 @@
         {{p.author}}
       </a>
 
+      <div> User Tutee Rating: {{owner.tuteeRating}} </div>
+      <div> Number of Jobs as a Tutee: {{owner.numberTuteeJobs}} </div>
+
       <div class="label label-info">
         {{p.created.strftime("%b %d, %Y")}}
       </div>
@@ -68,19 +71,22 @@
 <hr><hr>
 
 
-<div> LIST OF COMMENTS </div>
-<br>
-{{commentText | safe}}
-<br>
+  <div> LIST OF COMMENTS </div>
+  <br>
+    {{commentText | safe}}
+  <br>
 
-<form method="post" class="jumbotron">
-  <div>
-    <b>Comment</b>
-  </div>
-  <textarea class="form-control" name="content" rows="7" placeholder="(HTML formatting available)">{{content}}</textarea>
-  <div class="error">{{error}}</div>
-  <br><br>
-  <input type="submit" class="btn btn-primary">
-</form>
+  {% if not p.selectedTutor: %}
+    <form method="post" class="jumbotron">
+      <div>
+        <b>Comment</b>
+      </div>
+      <textarea class="form-control" name="content" rows="7" placeholder="(HTML formatting available)">{{content}}</textarea>
+      <div class="error">{{error}}</div>
+      <br><br>
+      <input type="submit" class="btn btn-primary">
+    </form>
+  {% endif %}
+
 
 </div>

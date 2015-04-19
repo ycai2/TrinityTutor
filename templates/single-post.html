@@ -9,6 +9,9 @@
         {{p.author}}
       </a>
 
+      <div> User Tutee Rating: {{owner.tuteeRating}} </div>
+      <div> Number of Jobs as a Tutee: {{owner.numberTuteeJobs}} </div>
+
       <div class="label label-info">
         {{p.created.strftime("%b %d, %Y")}}
       </div>
@@ -60,11 +63,9 @@
 {{commentText | safe}}
 <br>
 
-
+{% if not p.selectedTutor: %}
 <form method="post" class="jumbotron">
-  {% if not p.selectedTutor: %}
-    <input type="submit" name="apply" class="btn btn-primary" value="Apply for this position now"></input>
-  {% endif %}
+  <input type="submit" name="apply" class="btn btn-primary" value="Apply for this position now"></input>
   <br><br>
 
   <div>
@@ -75,5 +76,6 @@
   <br><br>
   <input type="submit" class="btn btn-primary">
 </form>
+{% endif %}
 
 </div>
