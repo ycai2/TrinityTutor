@@ -1,8 +1,12 @@
 {% extends "base.html" %}
 
+
 {% block content %}
   <form method="post">
     <select name="subjectTag">
+      {% if subjectTag: %}
+        <option value="{{subjectTag}}" selected="selected"> {{subjectTag.title()}} </option>
+      {% endif %}
       <option value="None">--------Select a subject--------</option>
       <option value="American Studies">American Studies</option>
       <option value="Anthropology">Anthropology</option>
@@ -41,6 +45,9 @@
       <option value="Women, Gender, and Sexuality">Women, Gender, and Sexuality</option>
     </select>
     <select name="sortingTag">
+      {% if sortingTag: %}
+        <option value="{{sortingTag}}" selected="selected"> {{sortingTag.title()}} </option>
+      {% endif %}
       <option value="None">-----Sort by-----</option>
       <option value="wage">Wage</option>
       <option value="difficulty">Difficulty</option>

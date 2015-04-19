@@ -166,12 +166,12 @@ class User(db.Model):
 
     def renderApplied(self):
         appliedList = self.appliedList
-        aplliedText = ""
+        appliedText = ""
         for postID in appliedList:
             post = Post.by_id(int(postID))
             if post:
-                aplliedText += post.render()
-        return aplliedText
+                appliedText += post.render()
+        return appliedText
 
 
 def _key(name = 'default'):
