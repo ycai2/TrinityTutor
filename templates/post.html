@@ -20,7 +20,7 @@
   </div>
 
   <div class="post-content">
-    Subject: {{p.subect}}
+    Subject: {{p.subject}}
   </div>
   <h4>
     <div class="post-content">
@@ -31,11 +31,25 @@
   </h4>
 
   <div class="post-content">
-    Difficulty: {{p.difficulty}}
+    {% if p.difficulty == 1 %}
+      Difficulty: Easy
+    {% elif p.difficulty == 2 %}
+      Difficulty: Medium
+    {% elif p.difficulty == 3 %}
+      Difficulty: Hard
+    {% elif p.difficulty == 4 %}
+      Difficulty: Very Hard
+    {% endif %}
   </div>
 
   <div class="post-content">
-    Frequency of Meetings: {{p.meetings}}
+    {% if p.difficulty == 1 %}
+      Frequency of Meetings: Once
+    {% elif p.difficulty == 2 %}
+      Frequency of Meetings: Several
+    {% elif p.difficulty == 3 %}
+      Frequency of Meetings: More...
+    {% endif %}
   </div>
 
   {% if p.selectedTutor: %}

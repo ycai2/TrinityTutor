@@ -179,12 +179,12 @@ class User(db.Model):
 
     def renderApplied(self):
         appliedList = self.appliedList
-        aplliedText = ""
+        appliedText = ""
         for postID in appliedList:
             post = Post.by_id(int(postID))
             if post:
-                aplliedText += post.render()
-        return aplliedText
+                appliedText += post.render()
+        return appliedText
 
 
 def _key(name = 'default'):
@@ -197,8 +197,8 @@ class Post(db.Model):
     content = db.TextProperty(required = True)
 
     wage = db.IntegerProperty(required = True)
-    meetings = db.StringProperty(required = True)
-    difficulty = db.StringProperty(required = True)
+    meetings = db.IntegerProperty(required = True)
+    difficulty = db.IntegerProperty(required = True)
 
     author = db.StringProperty(required = True)
     authorID = db.StringProperty(required = True)
@@ -330,6 +330,27 @@ class Front(Handler):
     def get(self):
         posts = greetings = Post.all().order('-created')
         self.render('front.html', posts = posts)
+
+    def post(self):
+        subject = self.request.get('subjectTag')
+        sorting = self.request.get('sortingTag')
+        print subject
+        print sorting
+        if (sorting != 'None') and (subject != 'None'):
+            posts = greetings = Post.all().filter('subject =', subject).order('-%s' % sorting)
+
+        if (subject == 'None') and (sorting == 'None'):
+            print 'chee'
+            posts = greetings = Post.all().order('-created')
+        
+        elif subject == 'None':
+            posts = greetings = Post.all().order('-%s' % sorting)
+
+        elif sorting == 'None':
+            posts = greetings = Post.all().filter('subject =', subject).order('-created')
+
+
+        self.render('front.html', posts = posts, subjectTag = subject, sortingTag = sorting)    
 
 class ShowAllUsers(Handler):
     def get(self):
@@ -510,8 +531,8 @@ class NewPost(Handler):
             selectedSubject = self.request.get('subjectList')
             content = self.request.get('content')
             wage = int(self.request.get('wage'))
-            selectedMeetings = self.request.get('meetingsList')
-            selectedDifficulty = self.request.get('difficultyList')
+            selectedMeetings = int(self.request.get('meetingsList'))
+            selectedDifficulty = int(self.request.get('difficultyList'))
 
             if title and selectedSubject and content and wage and selectedMeetings and selectedDifficulty:
                 p = Post(parent = _key(), title = title, subject = selectedSubject, content = content, wage = wage, meetings = selectedMeetings, difficulty = selectedDifficulty, author = self.user.name, authorID = str(self.user.key().id()))
