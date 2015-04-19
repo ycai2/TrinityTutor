@@ -355,7 +355,7 @@ class Front(Handler):
 class ShowAllUsers(Handler):
     def get(self):
         users = User.all().order('-created')
-        self.render("front.html", posts = users)
+        self.render("loadAllUsers.html", users = users)
 
 class ConnectionRedirect(Handler):
     def get(self):
