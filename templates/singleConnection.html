@@ -1,0 +1,14 @@
+<div class="panel panel-default">
+  <div class="panel-heading"> Username is 
+    <a href="/users/{{user.key().id()}}">{{user.name}}</a>
+  </div>
+  <div class="panel-heading"> Email is {{user.email}}</div>
+  <div class="panel-heading"> Connection made {{connection.created.strftime("%H:%M:%S, %b %d, %Y")}}</div>
+  <div class="panel-body">
+    <a href="/afh/{{AFH.key().id()}}">
+      {{AFH.title | safe}}
+    </a>
+  </div>
+</div>
+<br><br>
+<hr><hr>

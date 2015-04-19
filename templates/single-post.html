@@ -7,7 +7,7 @@
       Posted by
       <a href="/users/{{p.authorID}}" class="label label-warning">
         {{p.author}}
-      </a>&nbsp;
+      </a>
 
       <div class="label label-info">
         {{p.created.strftime("%b %d, %Y")}}
@@ -42,20 +42,10 @@
 
 {% if not p.selectedTutor: %}
   <div> Respondent Profiles </div>
-  <menu>
-    {% set  count = 1 %}
-    {% for i in respondents %}
-      <menuitem>
-        <div> {{count}}. </div>
-        <div>  Username: 
-          <a href="/users/{{i.userid}}">{{i.respondent}}</a>
-        </div>
-        <div> User Rating: {{i.rating}} </div>
-      </menuitem>
-      <br>
-      {% set count = count + 1 %}
-    {% endfor %}
-  </menu>
+  <br>
+
+  {{respondentText | safe}}
+
 {% endif %}
 
 {% if p.selectedTutor: %}
@@ -66,15 +56,10 @@
 
 
 <div> LIST OF COMMENTS </div>
-{% for i in comments %}
+<br>
+{{commentText | safe}}
+<br>
 
-<div class="panel panel-default">
-  <div class="panel-heading"> {{i.author}} {{i.created.strftime("%H:%M:%S, %b %d, %Y")}}</div>
-  <div class="panel-body">
-    {{i.content | safe}}
-  </div>
-</div>
-{% endfor %}
 
 <form method="post" class="jumbotron">
   {% if not p.selectedTutor: %}

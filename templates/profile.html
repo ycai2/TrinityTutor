@@ -1,7 +1,7 @@
 {% extends "base.html" %}
     {% block navbar %}
         <li><a href="/">Home</a></li>
-        <li><a href="/newpost">New AFH</a></li>
+        <li><a href="/newpost">New Post</a></li>
         <li class="active"><a href="/users/{{u.key().id()}}">Profile</a></li>
     {% endblock %}
     {% block content %}
@@ -32,6 +32,14 @@
                     <td>{{u.email}}</td>
                   </tr>
                   <tr>
+                    <td>Rating</td>
+                    <td>{{u.rating}}</td>
+                  </tr>
+                  <tr>
+                    <td>Number of Jobs</td>
+                    <td>{{u.numberJobs}}</td>
+                  </tr>
+                  <tr>
                     <td>Description</td>
                     <td>{{u.description}}</td>
                   </tr>
@@ -43,4 +51,10 @@
             </table>
         </div>
     </div>
+
+    <div>
+      {{feedbacks | safe}}
+    </div>
+
+
     {% endblock %}
