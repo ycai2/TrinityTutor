@@ -46,7 +46,7 @@
       <option value="difficulty">Difficulty</option>
       <option value="meetings">Frequency</option>
     </select>
-    <input type="submit" class="btn btn-xs btn-default">
+    <input type="submit" value="sort" class="btn btn-xs btn-default">
   </form>
   {% for p in posts %}
     <div class="jumbotron">{{ p.render() | safe }}</div>
