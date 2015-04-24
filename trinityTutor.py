@@ -104,8 +104,12 @@ class User(db.Model):
     year = db.IntegerProperty(required = True)
     major = db.StringProperty(required = True)
     description = db.StringProperty()
-    rating = db.FloatProperty()
-    numberJobs = db.IntegerProperty(required = True)
+    
+    tutorRating = db.FloatProperty()
+    numberTutorJobs = db.IntegerProperty(required = True)
+    tuteeRating = db.FloatProperty()
+    numberTuteeJobs = db.IntegerProperty(required = True)
+    
 
     feedbackList = db.ListProperty(str, indexed = True, default=[])
     connectionList = db.ListProperty(str, indexed = True, default=[])
@@ -132,8 +136,10 @@ class User(db.Model):
                     year = int(year),
                     major = major,
                     description = description,
-                    rating = 0.0,
-                    numberJobs = 0)
+                    tutorRating = 0.0,
+                    tuteeRating = 0.0,
+                    numberTuteeJobs = 0,
+                    numberTutorJobs = 0)
 
     @classmethod
     def login(cls, name, pw):
@@ -141,11 +147,18 @@ class User(db.Model):
         if u and valid_pw(name, pw, u.pw_hash):
             return u
 
-    def calculateRating(self, newRate):
+    def calculateTutorRating(self, newRate):
         thisUser = self
-        oldRating = thisUser.numberJobs * thisUser.rating
-        thisUser.numberJobs = thisUser.numberJobs + 1
-        thisUser.rating = (oldRating + newRate)/thisUser.numberJobs
+        oldRating = thisUser.numberTutorJobs * thisUser.tutorRating
+        thisUser.numberTutorJobs = thisUser.numberTutorJobs + 1
+        thisUser.tutorRating = (oldRating + newRate)/thisUser.numberTutorJobs
+        thisUser.put()
+
+    def calculateTuteeRating(self, newRate):
+        thisUser = self
+        oldRating = thisUser.numberTuteeJobs * thisUser.tuteeRating
+        thisUser.numberTuteeJobs = thisUser.numberTuteeJobs + 1
+        thisUser.tuteeRating = (oldRating + newRate)/thisUser.numberTuteeJobs
         thisUser.put()
 
     def render(self):
@@ -209,7 +222,8 @@ class Post(db.Model):
 
     def render(self):
         self._render_text = self.content.replace('\n', '<br>')
-        return render_str("post.html", p = self)
+        owner = User.by_id(int(self.authorID))
+        return render_str("post.html", p = self, owner = owner)
 
     def render_page(self):
         self._render_text = self.content.replace('\n', '<br>')
@@ -228,7 +242,9 @@ class Post(db.Model):
             if comment:
                 commentText += comment.render()
 
-        return render_str("single-post.html", p = self, commentText = commentText, respondentNameList = self.respondentNameList, respondentText = respondentText)
+        owner = User.by_id(int(self.authorID))
+
+        return render_str("single-post.html", p = self, commentText = commentText, respondentNameList = self.respondentNameList, respondentText = respondentText, owner = owner)
 
     def render_ownerPage(self):
         self._render_text = self.content.replace('\n', '<br>')
@@ -247,7 +263,9 @@ class Post(db.Model):
             if comment:
                 commentText += comment.render()
        
-        return render_str("owner-single-post.html", p = self, commentText = commentText, respondentNameList = self.respondentNameList, respondentText = respondentText)
+        owner = User.by_id(int(self.authorID))
+
+        return render_str("owner-single-post.html", p = self, commentText = commentText, respondentNameList = self.respondentNameList, respondentText = respondentText, owner = owner)
 
     def exchangeContact(self, user):
         selectedTutor = User.by_name(self.selectedTutor)
@@ -337,7 +355,7 @@ class Front(Handler):
 class ShowAllUsers(Handler):
     def get(self):
         users = User.all().order('-created')
-        self.render("front.html", posts = users)
+        self.render("loadAllUsers.html", users = users)
 
 class ConnectionRedirect(Handler):
     def get(self):
@@ -402,7 +420,7 @@ class FeedbackPage(Handler):
                 user = User.by_id(int(post.selectedTutorID))
                 user.feedbackList.append(str(f.key().id()))
                 user.put()
-                user.calculateRating(rating)
+                user.calculateTutorRating(rating)
                 post.feedbackOnTutor = True
                 post.put()
 
@@ -412,7 +430,7 @@ class FeedbackPage(Handler):
                 user = User.by_id(int(post.authorID))
                 user.feedbackList.append(str(f.key().id()))
                 user.put()
-                user.calculateRating(rating)
+                user.calculateTuteeRating(rating)
                 post.feedbackOnTutee = True
                 post.put()
             self.redirect('/')
@@ -432,7 +450,8 @@ class PostPage(Handler):
         else:
             if post.selectedTutor:
                 if ((self.user.key().id() == int(post.selectedTutorID)) or (self.user.key().id() == int(post.authorID))):
-                    self.render("feedbackOption.html", p = post)
+                    owner = User.by_id(int(post.authorID))
+                    self.render("feedbackOption.html", p = post, owner = owner)
                 else:
                     self.render("permalink.html", post = post)
             elif self.user.name == Post.by_id(int(post_id)).author:
