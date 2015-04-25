@@ -12,6 +12,7 @@ import webapp2
 import jinja2
 
 from google.appengine.ext import db
+from google.appengine.api import mail
 
 template_dir = os.path.join(os.path.dirname(__file__), 'templates')
 jinja_env = jinja2.Environment(loader = jinja2.FileSystemLoader(template_dir),
@@ -87,6 +88,12 @@ def make_pw_hash(name, pw, salt = None):
     h = hashlib.sha256(name + pw + salt).hexdigest()
     return '%s,%s' % (salt, h)
 
+def make_email_hash(email, salt = None):
+    if not salt:
+        salt = make_salt()
+    h = hashlib.sha256(email + salt).hexdigest()
+    return '%s' % (h)
+
 def valid_pw(name, password, h):
     salt = h.split(',')[0]
     return h == make_pw_hash(name, password, salt)
@@ -132,7 +139,7 @@ class User(db.Model):
     @classmethod
     def register(cls, name, pw, email, nickname, year, major, description):
         pw_hash = make_pw_hash(name, pw)
-        email_hash = make_pw_hash(name, email)
+        email_hash = make_email_hash(email)
         return User(parent = users_key(),
                     name = name,
                     pw_hash = pw_hash,
@@ -625,7 +632,41 @@ class Register(Signup):
         else:
             u = User.register(self.username, self.password, self.email, self.name, self.year, self.major, self.description)
             u.put()
-            self.login(u)
+
+            message = mail.EmailMessage(sender="Trinity Tutor Support <support@trinity-tutor.appspot.com>",
+                      subject="Verify your account")
+
+            message.to = self.request.get('email')
+
+            message.body = """
+
+            Your Trinity Tutor account has been approved. 
+
+            Click here to verify your account.    
+
+            Please let us know if you have any questions.
+
+            The Trinity Tutor Team
+            """
+
+            insertEmail = u.key().id()
+            emailContent = """
+            <html><head></head><body>
+
+            Your Trinity Tutor account has been approved. 
+
+            Please let us know if you have any questions.
+
+            <a href="/confirmation/%s">Click here to verify your account.</a>
+
+            </body></html>
+            """
+            message.html = emailContent % insertEmail
+            print message.html
+            print u.email_hash
+
+            message.send()
+
             self.redirect('/')
 
 class Profile(Handler):
@@ -671,12 +712,15 @@ class Welcome(Handler):
         else:
             self.redirect('/signup')
 
-class Confirm(Handler):
-    def get(self, email_hash):
-        self.render("confirmationPage.html")
+class ConfirmPage(Handler):
+    def get(self, user_id):
+        user = User.by_id(int(user_id))
+        #user = User.all().filter('email_hash =', email_hash).get()
+        self.render("confirmationPage.html", userName = user.name, userConfirmed = user.confirmed)
 
-    def post(self, email_hash):
-        user = User.all().filter('email_hash =', email_hash).get()
+    def post(self, user_id):
+        user = User.by_id(int(user_id))
+        # user = User.all().filter('email_hash =', email_hash).get()
         user.confirmed = True
         user.put()
         self.redirect('/')
@@ -684,7 +728,7 @@ class Confirm(Handler):
 app = webapp2.WSGIApplication([('/', Front),
                                ('/afh/([0-9]+)(?:.json)?', PostPage),
                                ('/feedback/([0-9]+)(?:.json)?', FeedbackPage),
-                               ('/confirmation/([a-zA-Z0-9_-]+)(?:.json)?', ConfirmPage),
+                               ('/confirmation/([0-9]+)(?:.json)?', ConfirmPage),
                                ('/newpost', NewPost),
                                ('/signup', Register),
                                ('/login', Login),
