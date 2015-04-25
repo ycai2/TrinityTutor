@@ -11,5 +11,15 @@
 {% endblock %}
 
 {% block content %}
-  {{post.render_ownerPage() | safe}}
+<div class="post">
+
+<div> Hello {{userName}} </div>
+{% if not userConfirmed: %}
+<form method="post" class="jumbotron">
+  <input type="submit" name="confirm" class="btn btn-primary" value="Confirm your account"></input>
+  <br><br>
+</form>
+{% endif %}
+
+</div>
 {% endblock %}
