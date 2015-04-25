@@ -99,11 +99,14 @@ class User(db.Model):
     name = db.StringProperty(required = True)
     pw_hash = db.StringProperty(required = True)
     created = db.DateTimeProperty(auto_now_add = True)
+    email_hash = db.StringProperty(required = True)
     email = db.StringProperty(required = True)
     nickname = db.StringProperty(required = True)
     year = db.IntegerProperty(required = True)
     major = db.StringProperty(required = True)
     description = db.StringProperty()
+    confirmed = db.BooleanProperty(required = True)
+
     
     tutorRating = db.FloatProperty()
     numberTutorJobs = db.IntegerProperty(required = True)
@@ -120,6 +123,7 @@ class User(db.Model):
     def by_id(cls, uid):
         return User.get_by_id(uid, parent = users_key())
 
+    
     @classmethod
     def by_name(cls, name):
         u = User.all().filter('name =', name).get()
@@ -128,14 +132,17 @@ class User(db.Model):
     @classmethod
     def register(cls, name, pw, email, nickname, year, major, description):
         pw_hash = make_pw_hash(name, pw)
+        email_hash = make_pw_hash(name, email)
         return User(parent = users_key(),
                     name = name,
                     pw_hash = pw_hash,
+                    email_hash = email_hash,
                     email = email,
                     nickname = nickname,
                     year = int(year),
                     major = major,
                     description = description,
+                    confirmed = False,
                     tutorRating = 0.0,
                     tuteeRating = 0.0,
                     numberTuteeJobs = 0,
@@ -144,7 +151,7 @@ class User(db.Model):
     @classmethod
     def login(cls, name, pw):
         u = cls.by_name(name)
-        if u and valid_pw(name, pw, u.pw_hash):
+        if u and valid_pw(name, pw, u.pw_hash) and u.confirmed:
             return u
 
     def calculateTutorRating(self, newRate):
@@ -664,10 +671,20 @@ class Welcome(Handler):
         else:
             self.redirect('/signup')
 
+class Confirm(Handler):
+    def get(self, email_hash):
+        self.render("confirmationPage.html")
+
+    def post(self, email_hash):
+        user = User.all().filter('email_hash =', email_hash).get()
+        user.confirmed = True
+        user.put()
+        self.redirect('/')
 
 app = webapp2.WSGIApplication([('/', Front),
                                ('/afh/([0-9]+)(?:.json)?', PostPage),
                                ('/feedback/([0-9]+)(?:.json)?', FeedbackPage),
+                               ('/confirmation/([a-zA-Z0-9_-]+)(?:.json)?', ConfirmPage),
                                ('/newpost', NewPost),
                                ('/signup', Register),
                                ('/login', Login),
