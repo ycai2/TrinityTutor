@@ -27,3 +27,9 @@ indexes:
   - name: subject
   - name: wage
     direction: desc
+
+- kind: Post
+  properties:
+  - name: subject
+  - name: created
+    direction: desc

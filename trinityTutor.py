@@ -630,10 +630,10 @@ class Register(Signup):
             msg = 'That user already exists.'
             self.render('signup-form.html', error_username = msg)
         else:
-            u = User.register(self.username, self.password, self.email, self.name, self.year, self.major, self.description)
+            u = User.register(self.username.lower(), self.password, self.email.lower(), self.name, self.year, self.major, self.description)
             u.put()
 
-            message = mail.EmailMessage(sender="Trinity Tutor Support <support@trinity-tutor.appspot.com>",
+            message = mail.EmailMessage(sender="Trinity Tutor Support <stevenyee64@gmail.com>",
                       subject="Verify your account")
 
             message.to = self.request.get('email')
@@ -650,18 +650,23 @@ class Register(Signup):
             """
 
             insertEmail = u.key().id()
+            insertName = u.nickname
             emailContent = """
             <html><head></head><body>
+            Dear %s,
 
             Your Trinity Tutor account has been approved. 
 
             Please let us know if you have any questions.
 
-            <a href="/confirmation/%s">Click here to verify your account.</a>
+            <a href="http://www.trinity-tutor.appspot.com/confirmation/%s">Click here to verify your account.</a>
+
+            Best,
+            The Trinity Tutor Team
 
             </body></html>
             """
-            message.html = emailContent % insertEmail
+            message.html = emailContent % (insertName, insertEmail)
             print message.html
             print u.email_hash
 
@@ -689,7 +694,7 @@ class Login(Handler):
         self.render('login-form.html')
 
     def post(self):
-        username = self.request.get('username')
+        username = self.request.get('username').lower()
         password = self.request.get('password')
 
         u = User.login(username, password)
