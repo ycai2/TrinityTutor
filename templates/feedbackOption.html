@@ -4,6 +4,8 @@
   <li><a href="/newpost">New Post</a></li>
   {% if user %}
     <li><a href="/users/{{user.key().id()}}">Profile</a></li>
+    <li><a href="/created">Created</a></li>
+    <li><a href="/applied">Applied</a></li>
   {% endif %}
 {% endblock %}
 
