@@ -589,7 +589,6 @@ class Signup(Handler):
         self.major = self.request.get('major')
         self.description = self.request.get('description')
 
-
         params = dict(username = self.username,
                       email = self.email,
                       name = self.name,
@@ -612,8 +611,6 @@ class Signup(Handler):
         if not valid_email(self.email):
             params['error_email'] = "That's not a valid email."
             have_error = True
-
-
 
         if have_error:
             self.render('signup-form.html', **params)
@@ -640,11 +637,11 @@ class Register(Signup):
 
             message.body = """
 
-            Your Trinity Tutor account has been approved. 
+            Your Trinity Tutor account has been approved. <br>
 
-            Click here to verify your account.    
+            Click here to verify your account. <br>
 
-            Please let us know if you have any questions.
+            Please let us know if you have any questions. <br>
 
             The Trinity Tutor Team
             """
@@ -653,23 +650,20 @@ class Register(Signup):
             insertName = u.nickname
             emailContent = """
             <html><head></head><body>
-            Dear %s,
+            Dear %s, <br>
 
-            Your Trinity Tutor account has been approved. 
+            Your Trinity Tutor account has been approved. <br>
 
-            Please let us know if you have any questions.
+            Please let us know if you have any questions.<br>
 
-            <a href="http://www.trinity-tutor.appspot.com/confirmation/%s">Click here to verify your account.</a>
+            <a href="http://www.trinity-tutor.appspot.com/confirmation/%s">Click here to verify your account.</a> <br>
 
-            Best,
+            Best, <br>
             The Trinity Tutor Team
 
             </body></html>
             """
             message.html = emailContent % (insertName, insertEmail)
-            print message.html
-            print u.email_hash
-
             message.send()
 
             self.redirect('/')
