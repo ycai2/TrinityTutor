@@ -76,7 +76,7 @@
               
               <input type="password" name="verify" value="" class="form-control" placeholder="Confirm Password" required autofocus>
               <span class="glyphicon glyphicon-remove form-control-feedback" aria-hidden="true"></span>
-              <label class="control-label">Has to match password</label>
+              <label class="control-label">{{error_verify}}}</label>
             </div>
           {% else %}
             <div class="form-group">
@@ -86,13 +86,19 @@
 
           {% if error_email %}
             <div id="form-error" class="form-group has-error has-feedback">
-              <input type="text" name="email" value="{{email}}" class="form-control" placeholder="Email" required autofocus>
-              <span class="glyphicon glyphicon-remove form-control-feedback" aria-hidden="true"></span>
-              <label class="control-label">Has to input correct email format</label>
+              <div class="input-group">
+                <input type="text" name="email" value="{{email}}" class="form-control" placeholder="FirstName.LastName" required autofocus>
+                <div class="input-group-addon">@trincoll.edu</div>
+              </div>
+              <span class="glyphicon form-control-feedback" aria-hidden="true"></span>
+              <label class="control-label">{{error_email}}</label>
             </div>
           {% else %}
             <div class="form-group">
-              <input type="text" name="email" value="{{email}}" class="form-control" placeholder="Email" required autofocus>
+              <div class="input-group">
+                <input type="text" name="email" value="{{email}}" class="form-control" placeholder="FirstName.LastName" required autofocus>
+                <div class="input-group-addon">@trincoll.edu</div>
+              </div>
             </div>
           {% endif %}
 
