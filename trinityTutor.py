@@ -615,22 +615,23 @@ class Signup(Handler):
 
         if have_error:
             self.render('signup-form.html', **params)
+
         else:
-            self.done()
+            self.done(**params)
 
     def done(self, *a, **kw):
         raise NotImplementedError
 
 class Register(Signup):
-    def done(self):
+    def done(self, **params):
         u = User.by_name(self.username)
         emailCheck = User.all().filter('email_hash =', self.email_hash)
         if u:
             msg = 'That user already exists.'
-            self.render('signup-form.html', error_username = msg)
+            self.render('signup-form.html', error_username = msg, **params)
         elif emailCheck:
             msg = "That email is already registered with Trinity Tutor."
-            self.render('signup-form.html', error_username = msg)
+            self.render('signup-form.html', error_email = msg, **params)
         else:
             u = User.register(self.username.lower(), self.password, self.email.lower(), self.name, self.year, self.major, self.description)
             u.put()
