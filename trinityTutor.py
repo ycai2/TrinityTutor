@@ -584,11 +584,11 @@ class Signup(Handler):
         self.password = self.request.get('password')
         self.verify = self.request.get('verify')
         self.email = self.request.get('email')
+        self.email_hash = make_email_hash(self.email)
         self.name = self.request.get('name')
         self.year = self.request.get('year')
         self.major = self.request.get('major')
         self.description = self.request.get('description')
-
 
         params = dict(username = self.username,
                       email = self.email,
@@ -613,8 +613,6 @@ class Signup(Handler):
             params['error_email'] = "That's not a valid email."
             have_error = True
 
-
-
         if have_error:
             self.render('signup-form.html', **params)
         else:
@@ -626,8 +624,12 @@ class Signup(Handler):
 class Register(Signup):
     def done(self):
         u = User.by_name(self.username)
+        emailCheck = User.all().filter('email_hash =', self.email_hash)
         if u:
             msg = 'That user already exists.'
+            self.render('signup-form.html', error_username = msg)
+        elif emailCheck:
+            msg = "That email is already registered with Trinity Tutor."
             self.render('signup-form.html', error_username = msg)
         else:
             u = User.register(self.username.lower(), self.password, self.email.lower(), self.name, self.year, self.major, self.description)
@@ -640,36 +642,33 @@ class Register(Signup):
 
             message.body = """
 
-            Your Trinity Tutor account has been approved. 
+            Your Trinity Tutor account has been approved. <br>
 
-            Click here to verify your account.    
+            Click here to verify your account. <br>
 
-            Please let us know if you have any questions.
+            Please let us know if you have any questions. <br>
 
             The Trinity Tutor Team
             """
 
-            insertEmail = u.key().id()
+            insertEmail = u.email_hash
             insertName = u.nickname
             emailContent = """
             <html><head></head><body>
-            Dear %s,
+            Dear %s, <br><br>
 
-            Your Trinity Tutor account has been approved. 
+            Your Trinity Tutor account has been approved. <br>
 
-            Please let us know if you have any questions.
+            Please let us know if you have any questions.<br>
 
-            <a href="http://www.trinity-tutor.appspot.com/confirmation/%s">Click here to verify your account.</a>
+            <a href="http://www.trinity-tutor.appspot.com/confirmation/%s">Click here to verify your account.</a> <br><br>
 
-            Best,
+            Best, <br>
             The Trinity Tutor Team
 
             </body></html>
             """
             message.html = emailContent % (insertName, insertEmail)
-            print message.html
-            print u.email_hash
-
             message.send()
 
             self.redirect('/')
@@ -718,14 +717,12 @@ class Welcome(Handler):
             self.redirect('/signup')
 
 class ConfirmPage(Handler):
-    def get(self, user_id):
-        user = User.by_id(int(user_id))
-        #user = User.all().filter('email_hash =', email_hash).get()
+    def get(self, email_hash):
+        user = User.all().filter('email_hash =', email_hash).get()
         self.render("confirmationPage.html", userName = user.name, userConfirmed = user.confirmed)
 
-    def post(self, user_id):
-        user = User.by_id(int(user_id))
-        # user = User.all().filter('email_hash =', email_hash).get()
+    def post(self, email_hash):
+        user = User.all().filter('email_hash =', email_hash).get()
         user.confirmed = True
         user.put()
         self.redirect('/')
@@ -733,7 +730,7 @@ class ConfirmPage(Handler):
 app = webapp2.WSGIApplication([('/', Front),
                                ('/afh/([0-9]+)(?:.json)?', PostPage),
                                ('/feedback/([0-9]+)(?:.json)?', FeedbackPage),
-                               ('/confirmation/([0-9]+)(?:.json)?', ConfirmPage),
+                               ('/confirmation/([a-zA-Z0-9]+)', ConfirmPage),
                                ('/newpost', NewPost),
                                ('/signup', Register),
                                ('/login', Login),
