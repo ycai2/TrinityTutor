@@ -646,7 +646,7 @@ class Register(Signup):
             The Trinity Tutor Team
             """
 
-            insertEmail = u.key().id()
+            insertEmail = u.email_hash
             insertName = u.nickname
             emailContent = """
             <html><head></head><body>
@@ -712,14 +712,12 @@ class Welcome(Handler):
             self.redirect('/signup')
 
 class ConfirmPage(Handler):
-    def get(self, user_id):
-        user = User.by_id(int(user_id))
-        #user = User.all().filter('email_hash =', email_hash).get()
+    def get(self, email_hash):
+        user = User.all().filter('email_hash =', email_hash).get()
         self.render("confirmationPage.html", userName = user.name, userConfirmed = user.confirmed)
 
-    def post(self, user_id):
-        user = User.by_id(int(user_id))
-        # user = User.all().filter('email_hash =', email_hash).get()
+    def post(self, email_hash):
+        user = User.all().filter('email_hash =', email_hash).get()
         user.confirmed = True
         user.put()
         self.redirect('/')
@@ -727,7 +725,7 @@ class ConfirmPage(Handler):
 app = webapp2.WSGIApplication([('/', Front),
                                ('/afh/([0-9]+)(?:.json)?', PostPage),
                                ('/feedback/([0-9]+)(?:.json)?', FeedbackPage),
-                               ('/confirmation/([0-9]+)(?:.json)?', ConfirmPage),
+                               ('/confirmation/([a-zA-Z0-9]+)', ConfirmPage),
                                ('/newpost', NewPost),
                                ('/signup', Register),
                                ('/login', Login),
