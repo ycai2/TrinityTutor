@@ -584,6 +584,7 @@ class Signup(Handler):
         self.password = self.request.get('password')
         self.verify = self.request.get('verify')
         self.email = self.request.get('email')
+        self.email_hash = make_email_hash(self.email)
         self.name = self.request.get('name')
         self.year = self.request.get('year')
         self.major = self.request.get('major')
@@ -623,8 +624,12 @@ class Signup(Handler):
 class Register(Signup):
     def done(self):
         u = User.by_name(self.username)
+        emailCheck = User.all().filter('email_hash =', self.email_hash)
         if u:
             msg = 'That user already exists.'
+            self.render('signup-form.html', error_username = msg)
+        elif emailCheck:
+            msg = "That email is already registered with Trinity Tutor."
             self.render('signup-form.html', error_username = msg)
         else:
             u = User.register(self.username.lower(), self.password, self.email.lower(), self.name, self.year, self.major, self.description)
@@ -650,13 +655,13 @@ class Register(Signup):
             insertName = u.nickname
             emailContent = """
             <html><head></head><body>
-            Dear %s, <br>
+            Dear %s, <br><br>
 
             Your Trinity Tutor account has been approved. <br>
 
             Please let us know if you have any questions.<br>
 
-            <a href="http://www.trinity-tutor.appspot.com/confirmation/%s">Click here to verify your account.</a> <br>
+            <a href="http://www.trinity-tutor.appspot.com/confirmation/%s">Click here to verify your account.</a> <br><br>
 
             Best, <br>
             The Trinity Tutor Team
