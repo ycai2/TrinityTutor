@@ -368,8 +368,11 @@ class Front(Handler):
 
 class ShowAllUsers(Handler):
     def get(self):
-        users = User.all().order('-created')
-        self.render("loadAllUsers.html", users = users)
+        if self.user:
+            users = User.all().order('-created')
+            self.render("loadAllUsers.html", users = users)
+        else:
+            self.redirect('/login')
 
 class ConnectionRedirect(Handler):
     def get(self):
@@ -406,51 +409,57 @@ class ConnectionsPage(Handler):
 
 class FeedbackPage(Handler):
     def get(self, post_id):
-        post = Post.by_id(int(post_id))
-
-        if post.selectedTutor:
-            if self.user.key().id() == int(post.selectedTutorID):
-                if post.feedbackOnTutee:
-                    self.redirect('/')
-                else:
-                    self.render("submitFeedback.html", post = post)
-            elif self.user.key().id() == int(post.authorID):
-                if post.feedbackOnTutor:
-                    self.redirect('/')
-                else:
-                    self.render("submitFeedback.html", post = post)
+        if self.user:
+            post = Post.by_id(int(post_id))
+            if post.selectedTutor:
+                if self.user.key().id() == int(post.selectedTutorID):
+                    if post.feedbackOnTutee:
+                        self.redirect('/')
+                    else:
+                        self.render("submitFeedback.html", post = post)
+                elif self.user.key().id() == int(post.authorID):
+                    if post.feedbackOnTutor:
+                        self.redirect('/')
+                    else:
+                        self.render("submitFeedback.html", post = post)
+            else:
+                self.redirect('/')
+                print "you do not have permission to view this page"
         else:
-            print "you do not have permission to view this page"
+            self.redirect('login')
 
     def post(self, post_id):
-        post = Post.by_id(int(post_id))
-        rating = int(self.request.get('rating'))
-        comment = self.request.get('comment')
+        if self.user:
+            post = Post.by_id(int(post_id))
+            rating = int(self.request.get('rating'))
+            comment = self.request.get('comment')
 
-        if rating:
-            if self.user.name == post.author:
-                f = Feedback(receiverID = post.selectedTutorID, writerID = str(self.user.key().id()), AFHID = str(post_id), rating = rating, comment = comment)
-                f.put()
-                user = User.by_id(int(post.selectedTutorID))
-                user.feedbackList.append(str(f.key().id()))
-                user.put()
-                user.calculateTutorRating(rating)
-                post.feedbackOnTutor = True
-                post.put()
+            if rating:
+                if self.user.name == post.author:
+                    f = Feedback(receiverID = post.selectedTutorID, writerID = str(self.user.key().id()), AFHID = str(post_id), rating = rating, comment = comment)
+                    f.put()
+                    user = User.by_id(int(post.selectedTutorID))
+                    user.feedbackList.append(str(f.key().id()))
+                    user.put()
+                    user.calculateTutorRating(rating)
+                    post.feedbackOnTutor = True
+                    post.put()
 
+                else:
+                    f = Feedback(receiverID = post.authorID, writerID = post.selectedTutorID, AFHID = str(post_id), rating = rating, comment = comment)
+                    f.put()
+                    user = User.by_id(int(post.authorID))
+                    user.feedbackList.append(str(f.key().id()))
+                    user.put()
+                    user.calculateTuteeRating(rating)
+                    post.feedbackOnTutee = True
+                    post.put()
+                self.redirect('/')
             else:
-                f = Feedback(receiverID = post.authorID, writerID = post.selectedTutorID, AFHID = str(post_id), rating = rating, comment = comment)
-                f.put()
-                user = User.by_id(int(post.authorID))
-                user.feedbackList.append(str(f.key().id()))
-                user.put()
-                user.calculateTuteeRating(rating)
-                post.feedbackOnTutee = True
-                post.put()
-            self.redirect('/')
+                print "You must submit a rating"
+                self.redirect('/feedback/%s' % str(post_id))
         else:
-            print "You must submit a rating"
-            #fix this later
+            self.redirect('login')
 
 class PostPage(Handler):
     def get(self, post_id):
@@ -458,76 +467,70 @@ class PostPage(Handler):
 
         if not post:
             self.error(404)
-            
-        if not self.user:
-            self.redirect("/login")
-        else:
-            if post.selectedTutor:
-                if ((self.user.key().id() == int(post.selectedTutorID)) or (self.user.key().id() == int(post.authorID))):
-                    owner = User.by_id(int(post.authorID))
-                    self.render("feedbackOption.html", p = post, owner = owner)
+        else:   
+            if self.user:
+                if post.selectedTutor:
+                    if ((self.user.key().id() == int(post.selectedTutorID)) or (self.user.key().id() == int(post.authorID))):
+                        owner = User.by_id(int(post.authorID))
+                        self.render("feedbackOption.html", p = post, owner = owner)
+                    else:
+                        self.render("permalink.html", post = post)
+                elif self.user.name == Post.by_id(int(post_id)).author:
+                    self.render("ownerPermalink.html", post = post)
                 else:
                     self.render("permalink.html", post = post)
-            elif self.user.name == Post.by_id(int(post_id)).author:
-                self.render("ownerPermalink.html", post = post)
             else:
-                self.render("permalink.html", post = post)
+                self.redirect("/login")
 
     def post(self, post_id):
         if not self.user:
             self.redirect('/')
-
-        post = Post.by_id(int(post_id))
-
-        isApply = self.request.get('apply')
-        isSelect = self.request.get('select')
-
-        if isSelect:
-            selected = self.request.get('selectList')
-            if selected:
-                thisAFH = Post.by_id(int(post_id))
-                thisAFH.selectedTutor = selected
-                thisAFH.selectedTutorID = str(User.by_name(selected).key().id())
-                thisAFH.put()
-                thisAFH.selectTutor(self.user)
-                self.redirect('/connections')
-            else:
-                self.redirect('/')
-
-        elif isApply:
-            respondent = self.user.name
-            alreadyAppliedFlag = False
-
-            for name in post.respondentNameList:
-                if name == respondent:
-                    alreadyAppliedFlag = True
-            if alreadyAppliedFlag:
-                self.redirect('/afh/%s' % post_id)
-            else:
-                post.respondentNameList.append(respondent)
-                post.respondentIDList.append(str(self.user.key().id()))
-                post.put()
-
-                self.user.appliedList.append(str(post.key().id()))
-                self.user.put()
-
-                self.redirect('/afh/%s' % post_id)
-
         else:
-            content = self.request.get('content').replace('\n', '<br>')
+            post = Post.by_id(int(post_id))
+            isApply = self.request.get('apply')
+            isSelect = self.request.get('select')
 
-            if not post:
-                self.error(404)
-                return
+            if isSelect:
+                selected = self.request.get('selectList')
+                if selected:
+                    thisAFH = Post.by_id(int(post_id))
+                    thisAFH.selectedTutor = selected
+                    thisAFH.selectedTutorID = str(User.by_name(selected).key().id())
+                    thisAFH.put()
+                    thisAFH.selectTutor(self.user)
+                    self.redirect('/connections')
+                else:
+                    self.redirect('/')
 
-            else:
-                if content:
-                    created = datetime.now() - timedelta(hours=5)
-                    comment = Comment(created = created, content = content, author = self.user.name)
-                    comment.put()
-                    post.commentIDList.append(str(comment.key().id()))
+            elif isApply:
+                respondent = self.user.name
+                alreadyAppliedFlag = False
+
+                for name in post.respondentNameList:
+                    if name == respondent:
+                        alreadyAppliedFlag = True
+                if alreadyAppliedFlag:
+                    self.redirect('/afh/%s' % post_id)
+                else:
+                    post.respondentNameList.append(respondent)
+                    post.respondentIDList.append(str(self.user.key().id()))
                     post.put()
-                self.redirect('/afh/%s' % post_id)
+                    self.user.appliedList.append(str(post.key().id()))
+                    self.user.put()
+                    self.redirect('/afh/%s' % post_id)
+            else:
+                content = self.request.get('content').replace('\n', '<br>')
+                if not post:
+                    self.error(404)
+                    return
+                else:
+                    if content:
+                        created = datetime.now() - timedelta(hours=5)
+                        comment = Comment(created = created, content = content, author = self.user.name)
+                        comment.put()
+                        post.commentIDList.append(str(comment.key().id()))
+                        post.put()
+                    self.redirect('/afh/%s' % str(post_id))
 
 
 class NewPost(Handler):
@@ -539,7 +542,7 @@ class NewPost(Handler):
 
     def post(self):
         if not self.user:
-            self.redirect('/')
+            self.redirect('/login')
         else:
             title = self.request.get('title')
             selectedSubject = self.request.get('subjectList')
@@ -710,13 +713,6 @@ class Logout(Handler):
         self.logout()
         self.redirect('/')
 
-class Welcome(Handler):
-    def get(self):
-        if self.user:
-            self.render('welcome.html', username = self.user.name)
-        else:
-            self.redirect('/signup')
-
 class ConfirmPage(Handler):
     def get(self, email_hash):
         user = User.all().filter('email_hash =', email_hash).get()
@@ -736,7 +732,6 @@ app = webapp2.WSGIApplication([('/', Front),
                                ('/signup', Register),
                                ('/login', Login),
                                ('/logout', Logout),
-                               ('/welcome', Welcome),
                                ('/myaccount', ShowMyAccount),
                                ('/created', Created),
                                ('/applied', Applied),
