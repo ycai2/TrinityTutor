@@ -624,7 +624,7 @@ class Signup(Handler):
 class Register(Signup):
     def done(self):
         u = User.by_name(self.username)
-        emailCheck = User.all().filter('email_hash =', self.email_hash)
+        emailCheck = User.all().filter('email =', self.email)
         if u:
             msg = 'That user already exists.'
             self.render('signup-form.html', error_username = msg)
@@ -686,7 +686,7 @@ class Profile(Handler):
                 if each:
                     feedbackText += each.render()
 
-            self.render("profile.html", u = user, feedbacks = feedbackText)
+            self.render("profile.html", u = user, feedbacks = feedbackText, currentUsername = self.user.name)
 
 class Login(Handler):
     def get(self):

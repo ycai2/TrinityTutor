@@ -13,6 +13,12 @@ indexes:
 - kind: Post
   properties:
   - name: subject
+  - name: created
+    direction: desc
+
+- kind: Post
+  properties:
+  - name: subject
   - name: difficulty
     direction: desc
 
@@ -26,10 +32,4 @@ indexes:
   properties:
   - name: subject
   - name: wage
-    direction: desc
-
-- kind: Post
-  properties:
-  - name: subject
-  - name: created
     direction: desc
