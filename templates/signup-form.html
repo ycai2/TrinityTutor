@@ -49,7 +49,7 @@
               
               <input type="text" name="username" value="{{username}}" class="form-control" placeholder="Username" required autofocus>
               <span class="glyphicon glyphicon-remove form-control-feedback" aria-hidden="true"></span>
-              <label class="control-label">Has to be at least 3 letters/numbers</label>
+              <label class="control-label">{{error_username}}</label>
             </div>
           {% else %}
             <div class="form-group">
@@ -63,7 +63,7 @@
               
               <input type="password" name="password" value="" class="form-control" placeholder="Password" required autofocus>
               <span class="glyphicon glyphicon-remove form-control-feedback" aria-hidden="true"></span>
-              <label class="control-label">Has to be at least 3 letters/numbers</label>
+              <label class="control-label">{{error_password}}</label>
             </div>
           {% else %}
             <div class="form-group">
