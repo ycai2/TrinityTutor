@@ -793,7 +793,7 @@ class ConfirmPage(Handler):
         user = User.all().filter('email_hash =', email_hash).get()
         user.confirmed = True
         user.put()
-        self.redirect('/')
+        self.redirect('/login')
 
 class FAQ(Handler):
     def get(self):
