@@ -6,6 +6,7 @@
         <li><a href="/created">Created</a></li>
         <li><a href="/applied">Applied</a></li>
         <li><a href="/connections">Connections</a></li>
+        <li><a href="/users">Users</a></li>
     {% endblock %}
     {% block content %}
     <div class="">
@@ -30,10 +31,12 @@
                     <td>Major</td>
                     <td>{{u.major}}</td>
                   </tr>
+                  {% if u.name == currentUsername: %}
                   <tr>
                     <td>Email</td>
                     <td>{{u.email}}</td>
                   </tr>
+                  {% endif %}
                   <tr>
                     <td>Tutor Rating</td>
                     <td>{{u.tutorRating}}</td>
@@ -53,10 +56,6 @@
                   <tr>
                     <td>Description</td>
                     <td>{{u.description}}</td>
-                  </tr>
-                  <tr>
-                    <td>Password</td>
-                    <td>Just kidding :)</td>
                   </tr>
                 </tbody>
             </table>
