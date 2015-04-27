@@ -575,9 +575,7 @@ def valid_password(password):
 
 EMAIL_RE  = re.compile(r"^[\S]+@[\S]+\.[\S]+$")
 def valid_email(email):
-    if "@" in email:
-        return False
-    return not email or EMAIL_RE.match(email)
+    return email and EMAIL_RE.match(email)
 
 class Signup(Handler):
     def get(self):
@@ -585,10 +583,20 @@ class Signup(Handler):
 
     def post(self):
         have_error = False
+        have_email_error = False
         self.username = self.request.get('username')
         self.password = self.request.get('password')
         self.verify = self.request.get('verify')
-        self.email = self.request.get('email')
+
+        if '@' not in self.request.get('email'):
+            self.email = self.request.get('email')+'@trincoll.edu'
+            
+        else: 
+            self.email = self.request.get('email')
+            have_email_error = True
+
+
+
         self.email_hash = make_email_hash(self.email)
         self.name = self.request.get('name')
         self.year = self.request.get('year')
@@ -596,7 +604,7 @@ class Signup(Handler):
         self.description = self.request.get('description')
 
         params = dict(username = self.username,
-                      email = self.email,
+                      email = self.request.get('email'),
                       name = self.name,
                       year = self.year,
                       major = self.major,
@@ -614,9 +622,11 @@ class Signup(Handler):
             params['error_verify'] = "Your passwords didn't match."
             have_error = True
 
-        if not valid_email(self.email+'@trincoll.edu'):
+        if (not valid_email(self.email)) or have_email_error:
             params['error_email'] = "That's not a valid email."
             have_error = True
+
+
 
         if have_error:
             self.render('signup-form.html', **params)
@@ -630,7 +640,7 @@ class Signup(Handler):
 class Register(Signup):
     def done(self, **params):
         u = User.by_name(self.username)
-        emailCheck = User.all().filter('email =', self.email+'@trincoll.edu')
+        emailCheck = User.all().filter('email =', self.email)
         print self.email
         if u:
             msg = 'That user already exists.'
