@@ -570,8 +570,10 @@ PASS_RE = re.compile(r"^.{3,20}$")
 def valid_password(password):
     return password and PASS_RE.match(password)
 
-EMAIL_RE  = re.compile(r'^[\S]+\.[\S]+$')
+EMAIL_RE  = re.compile(r"^[\S]+@[\S]+\.[\S]+$")
 def valid_email(email):
+    if "@" in email:
+        return False
     return not email or EMAIL_RE.match(email)
 
 class Signup(Handler):
@@ -609,7 +611,7 @@ class Signup(Handler):
             params['error_verify'] = "Your passwords didn't match."
             have_error = True
 
-        if not valid_email(self.email):
+        if not valid_email(self.email+'@trincoll.edu'):
             params['error_email'] = "That's not a valid email."
             have_error = True
 
@@ -625,7 +627,8 @@ class Signup(Handler):
 class Register(Signup):
     def done(self, **params):
         u = User.by_name(self.username)
-        emailCheck = User.all().filter('email =', self.email)
+        emailCheck = User.all().filter('email =', self.email+'@trincoll.edu')
+        print self.email
         if u:
             msg = 'That user already exists.'
             self.render('signup-form.html', error_username = msg, **params)
