@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+
+{% block navbar %}
+  <li><a href="/">Home</a></li>
+  <li><a href="/newpost">New Post</a></li>
+  {% if user %}
+    <li><a href="/users/{{user.key().id()}}">Profile</a></li>
+    <li><a href="/created">Created</a></li>
+    <li><a href="/applied">Applied</a></li>
+    <li><a href="/connections">Connections</a></li>
+    <li><a href="/users">Users</a></li>
+  {% endif %}
+  <li class="active"><a href="/faq">F&ampQ</a> 
+ {% endblock %}
+
+{% block content %}
+  <div class="container">
+    <h1>Trinity Tutor FAQ</h1>
+
+    <p>How do I create an account on Trinity Tutor?</p>
+    <br>
+
+    <p>To use Trinity Tutor, you must create an account on the website. To create an account, click on the "Signup" button. Here you will be asked to fill out some personal information. You must register with an @trincoll.edu email address. After creating the account, you will receive an email from Trinity Tutor. In this email will be a verification link that you must click on in order to verify your account to start using Trinity Tutor.</p>
+
+How do I create posts on Trinity Tutor?
+
+After you are done setting up your account and the account has been verified, you can then make posts requesting help on Trinity Tutor. To make a post, simply click on "New Post". Here you can fill out the form with details about your request for help. Once you are done filling out the relevant information, you can hit submit and your post will appear on the homepage of Trinity Tutor for everyone to see. If you would like to view the history of posts you have created, then you can click on "Created" to view your post history.
+
+How do I apply for posts?
+
+After signing up for Trinity Tutor, you can apply to any “open” posts on the website. Posts that already have a selected Tutor are “closed” and will not accept any further applicants. Simply click on the post which you are interested in tutoring someone for, and then click "Apply for this Position". You will then be put into a list of all respondents to that post. If you are selected for that tutoring position by the User that posted it, you will then be connected with that User. An email will be sent out notifying you a connection has been made. If you would like to see a history of posts you have applied to, you can click on “Applied” to view all the posts you have applied to. 
+
+How do I select a Tutor for a post I've created?
+
+As more Users see your post, they will begin to apply for the position. You can see who has
+applied to the position by clicking on the drop down under "List of Respondents", from here you can select a Tutor, and then click the button "Select this Tutor". You can view all the profiles of those that have applied to your post by clicking on their Usernames. Here you can see important information about them, such as their Tutor rating. You will then be brought to a page with the Tutor's email information so you can set up meetings.
+
+
+
+
+
+
+What do I do after a connection has been made?
+
+After you select the Tutor you desire, you will then be brought to your connections page. Here you will see the person’s username and email address. After that it is up to you to contact them to arrange meetings and payment. You can also view all the connections you have made thus far by clicking on “Connections” on the navigation bar. 
+
+What if I want to tutor someone? Do I have to set up a separate account?
+
+No, you do not have to set up a separate account. When your account is verified on Trinity Tutor, you can either post requests for help as a Tutee, or apply to other posts as a Tutor.
+
+What if I have questions about certain posts?
+
+Although we encourage Users to be as specific as possible when making posts for help, this may not always be the case. However, if you have questions regarding an assignment that someone needs help with, you can leave a comment on the post. Simply click on a post, type in your comments, and hit submit. 
+
+I only want to see posts about certain subjects. Is there any way to filter posts?
+
+Yes. On the homepage of Trinity Tutor, you can select how you want to filter the posts using various criteria. For example, if you want to see only jobs that are listed under Computer Science, you can select "Computer Science" from the subject drop down, and then press sort. You can also filter by wage, difficulty, meetings frequency, and any of the other various subjects.
+
+How do I leave feedback?
+
+Leaving feedback is a huge component of Trinity Tutor. We hope that Users of the website leave thoughtful, constructive feedback for both Tutors and Tutees. After you have selected a Tutor and received the help you need, you can click the link "Submit Feedback" on the post you created. Here you can leave a rating from one to five, with five being the highest possible rating, as well as comments about the experience. Your Tutor can also submit feedback on you as well. This feedback will be part of your Tutee rating. You will also have two ratings - one as a Tutor and one as a Tutee, which are calculated separately. Ratings are calculated by taking the average of all the ratings you have received thus far as a User of Trinity Tutor. 
+
+How do I find out more about Users who have applied to my post?
+
+Everyone that signs up for Trinity Tutor has a User profile that contains the relevant information when the User signed up for the website. Here you can also see past reviews for the User as well as overall feedback rating as a Tutor and a Tutee. Other Users can also go to your page to find out more information about you.
+    </p>
+  </div>
+
+{% endblock %}
