@@ -315,12 +315,14 @@ class Post(db.Model):
         Dear %s, <br><br>
         %s has connected with you on Trinity Tutor.<br>
         The original posting can be found <a href="http://www.trinity-tutor.appspot.com/afh/%s">here</a>.<br>
+        If the link does not automatically take you to the correct page, please copy and paste this link into your address bar: <br>
+        http://www.trinity-tutor.appspot.com/confirmation/%s <br>
         Please contact %s at %s.<br><br>
         Best, <br>
         The Trinity Tutor Team
         </body></html>
         """
-        message1.html = emailHTMLContent % (insertName, inserOtherUserName, insertAFH, inserOtherUserName, insertOtherUserEmail)
+        message1.html = emailHTMLContent % (insertName, inserOtherUserName, insertAFH, insertAFH, inserOtherUserName, insertOtherUserEmail)
         message1.send()
 
 
@@ -345,12 +347,14 @@ class Post(db.Model):
         Dear %s, <br><br>
         %s has connected with you on Trinity Tutor.<br>
         The original posting can be found <a href="http://www.trinity-tutor.appspot.com/afh/%s">here</a>.<br>
+        If the link does not automatically take you to the correct page, please copy and paste this link into your address bar: <br>
+        http://www.trinity-tutor.appspot.com/afh/%s <br>
         Please contact %s at %s.<br><br>
         Best, <br>
         The Trinity Tutor Team
         </body></html>
         """
-        message2.html = emailHTMLContent % (insertName, inserOtherUserName, insertAFH, inserOtherUserName, insertOtherUserEmail)
+        message2.html = emailHTMLContent % (insertName, inserOtherUserName, insertAFH, insertAFH, inserOtherUserName, insertOtherUserEmail)
         message2.send()
 
         
@@ -707,39 +711,31 @@ class Register(Signup):
             u = User.register(self.username.lower(), self.password, self.email.lower(), self.name, self.year, self.major, self.description)
             u.put()
 
-            message = mail.EmailMessage(sender="Trinity Tutor Support <stevenyee64@gmail.com>", subject="Verify your account")
-
-            message.to = self.request.get('email')
-
-            message.body = """
-
-            Your Trinity Tutor account has been approved. <br>
-
-            Click here to verify your account. <br>
-
-            Please let us know if you have any questions. <br>
-
-            The Trinity Tutor Team
-            """
-
             insertEmail = u.email_hash
             insertName = u.nickname
+            message = mail.EmailMessage(sender="Trinity Tutor Support <stevenyee64@gmail.com>", subject="Verify your account")
+            message.to = self.email
+            bodyContent = """
+            Your Trinity Tutor account has been approved. <br>
+            Click here to verify your account. http://www.trinity-tutor.appspot.com/confirmation/%s <br>
+            Please let us know if you have any questions. <br>
+            The Trinity Tutor Team
+            """
+            message.body = bodyContent % insertEmail
             emailContent = """
             <html><head></head><body>
             Dear %s, <br><br>
-
             Your Trinity Tutor account has been approved. <br>
-
             Please let us know if you have any questions.<br>
-
-            <a href="http://www.trinity-tutor.appspot.com/confirmation/%s">Click here to verify your account.</a> <br><br>
-
+            <a href="http://www.trinity-tutor.appspot.com/confirmation/%s">Click here to verify your account.</a><br>
+            If the link does not automatically take you to the correct page, please copy and paste this link into your address bar: <br>
+            http://www.trinity-tutor.appspot.com/confirmation/%s
+            <br><br>
             Best, <br>
             The Trinity Tutor Team
-
             </body></html>
             """
-            message.html = emailContent % (insertName, insertEmail)
+            message.html = emailContent % (insertName, insertEmail, insertEmail)
             message.send()
 
             self.redirect('/')
