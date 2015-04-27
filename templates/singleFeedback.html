@@ -6,10 +6,10 @@
     </div>
     <div>
       {% if writer.name == AFH.author: %}
-        <div> TUTOR </div>
+        <div> <font color="blue"> TUTOR </font></div>
       {% endif %}
       {% if writer.name != AFH.author: %}
-        <div> TUTEE </div>
+        <div> <font color="red">TUTEE </font></div>
       {% endif %}
     </div>
 
@@ -42,7 +42,7 @@
       {% elif AFH.difficulty == 4 %}
         Difficulty: Very Hard
       {% endif %}
-    </div>
+  </div>
 
   <div class="post-content">
     Comments: {{feedback.comment}}

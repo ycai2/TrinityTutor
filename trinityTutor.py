@@ -465,7 +465,7 @@ class ConnectionsPage(Handler):
                         connectionText += connection.render()
                 self.render("connections.html", p = self, connectionText = connectionText)
             else:
-                self.redirect('/')
+                self.redirect('/connections')
         else:
             self.redirect('/login')
 
@@ -477,16 +477,16 @@ class FeedbackPage(Handler):
             if post.selectedTutor:
                 if self.user.key().id() == int(post.selectedTutorID):
                     if post.feedbackOnTutee:
-                        self.redirect('/')
+                        self.redirect('/afh/%s' % str(post_id))
                     else:
                         self.render("submitFeedback.html", post = post)
                 elif self.user.key().id() == int(post.authorID):
                     if post.feedbackOnTutor:
-                        self.redirect('/')
+                        self.redirect('/afh/%s' % str(post_id))
                     else:
                         self.render("submitFeedback.html", post = post)
             else:
-                self.redirect('/')
+                self.redirect('/afh/%s' % str(post_id))
                 print "you do not have permission to view this page"
         else:
             self.redirect('login')
@@ -517,7 +517,7 @@ class FeedbackPage(Handler):
                     user.calculateTuteeRating(rating)
                     post.feedbackOnTutee = True
                     post.put()
-                self.redirect('/')
+                self.redirect('/afh/%s' % str(post_id))
             else:
                 print "You must submit a rating"
                 self.redirect('/feedback/%s' % str(post_id))
@@ -547,7 +547,7 @@ class PostPage(Handler):
 
     def post(self, post_id):
         if not self.user:
-            self.redirect('/')
+            self.redirect('/login')
         else:
             post = Post.by_id(int(post_id))
             isApply = self.request.get('apply')
@@ -563,7 +563,7 @@ class PostPage(Handler):
                     thisAFH.selectTutor(self.user)
                     self.redirect('/connections')
                 else:
-                    self.redirect('/')
+                    self.redirect('/afh/%s' % str(post_id))
 
             elif isApply:
                 respondent = self.user.name
@@ -626,7 +626,7 @@ class NewPost(Handler):
                 self.redirect('/afh/%s' % str(p.key().id()))
             
             else:
-                error = "Enter information in the required fields!"
+                error = "Enter information in the required fields! Some of your information may have been reset to default values!"
                 self.render("newpost.html", title = title, subject=selectedSubject, content=content, wage = wage, meetings = selectedMeetings, difficulty = selectedDifficulty, error=error)
 
 
