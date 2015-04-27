@@ -646,7 +646,9 @@ class Signup(Handler):
         self.username = self.request.get('username')
         self.password = self.request.get('password')
         self.verify = self.request.get('verify')
-        self.email = self.request.get('email')
+        self.email = self.request.get('email') + '@trincoll.edu'
+        print "ASDASDASDASD"
+        print self.email
         self.email_hash = make_email_hash(self.email)
         self.name = self.request.get('name')
         self.year = self.request.get('year')
@@ -688,7 +690,7 @@ class Signup(Handler):
 class Register(Signup):
     def done(self, **params):
         u = User.by_name(self.username)
-        emailCheck = User.all().filter('email =', self.email)
+        emailCheck = User.all().filter('email =', self.email).get()
         if u:
             msg = 'That user already exists.'
             self.render('signup-form.html', error_username = msg, **params)
