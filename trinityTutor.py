@@ -737,6 +737,11 @@ class ConfirmPage(Handler):
         user.put()
         self.redirect('/')
 
+class FAQ(Handler):
+    def get(self):
+        self.render("faq.html")
+
+
 app = webapp2.WSGIApplication([('/', Front),
                                ('/afh/([0-9]+)(?:.json)?', PostPage),
                                ('/feedback/([0-9]+)(?:.json)?', FeedbackPage),
@@ -751,6 +756,7 @@ app = webapp2.WSGIApplication([('/', Front),
                                ('/users', ShowAllUsers),
                                ('/connections', ConnectionRedirect),
                                ('/connections/([0-9]+)(?:.json)?', ConnectionsPage),
-                               ('/users/([0-9]+)(?:.json)?', Profile)
+                               ('/users/([0-9]+)(?:.json)?', Profile),
+                               ('/FAQ', FAQ),
                                ],
                               debug=True)
