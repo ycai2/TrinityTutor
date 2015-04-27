@@ -293,6 +293,66 @@ class Post(db.Model):
         secondConnection.put()
         selectedTutor.connectionList.append(str(secondConnection.key().id()))
         selectedTutor.put()
+
+
+        insertName = selectedTutor.nickname
+        inserOtherUserName = user.name
+        insertAFH = self.key().id()
+        insertOtherUserEmail = user.email
+        message1 = mail.EmailMessage(sender="Trinity Tutor Support <stevenyee64@gmail.com>", subject="Connection Made on Trinity Tutor")
+        message1.to = selectedTutor.email
+        emailPlainContent = """
+        Dear %s,
+        %s has connected with you on Trinity Tutor.
+        The original posting can be found here <http://www.trinity-tutor.appspot.com/afh/%s>
+        Please contact %s at %s.
+        Best,
+        The Trinity Tutor Team
+        """
+        message1.body = emailPlainContent % (insertName, inserOtherUserName, insertAFH, inserOtherUserName, insertOtherUserEmail)
+        emailHTMLContent = """
+        <html><head></head><body>
+        Dear %s, <br><br>
+        %s has connected with you on Trinity Tutor.<br>
+        The original posting can be found <a href="http://www.trinity-tutor.appspot.com/afh/%s">here</a>.<br>
+        Please contact %s at %s.<br><br>
+        Best, <br>
+        The Trinity Tutor Team
+        </body></html>
+        """
+        message1.html = emailHTMLContent % (insertName, inserOtherUserName, insertAFH, inserOtherUserName, insertOtherUserEmail)
+        message1.send()
+
+
+        insertName = user.nickname
+        inserOtherUserName = selectedTutor.name
+        insertAFH = self.key().id()
+        insertOtherUserEmail = selectedTutor.email
+        message2 = mail.EmailMessage(sender="Trinity Tutor Support <stevenyee64@gmail.com>", subject="Connection Made on Trinity Tutor")
+        message2.to = selectedTutor.email
+        emailPlainContent = """
+        Dear %s,
+        %s has connected with you on Trinity Tutor.
+        The original posting can be found here <http://www.trinity-tutor.appspot.com/afh/%s>
+        Please contact %s at %s.
+        Best,
+        The Trinity Tutor Team
+        """
+        print "TESTING EMEAIL"
+        message2.body = emailPlainContent % (insertName, inserOtherUserName, insertAFH, inserOtherUserName, insertOtherUserEmail)
+        emailHTMLContent = """
+        <html><head></head><body>
+        Dear %s, <br><br>
+        %s has connected with you on Trinity Tutor.<br>
+        The original posting can be found <a href="http://www.trinity-tutor.appspot.com/afh/%s">here</a>.<br>
+        Please contact %s at %s.<br><br>
+        Best, <br>
+        The Trinity Tutor Team
+        </body></html>
+        """
+        message2.html = emailHTMLContent % (insertName, inserOtherUserName, insertAFH, inserOtherUserName, insertOtherUserEmail)
+        message2.send()
+
         
     def selectTutor(self, user):
         self.exchangeContact(user)
@@ -639,8 +699,7 @@ class Register(Signup):
             u = User.register(self.username.lower(), self.password, self.email.lower(), self.name, self.year, self.major, self.description)
             u.put()
 
-            message = mail.EmailMessage(sender="Trinity Tutor Support <stevenyee64@gmail.com>",
-                      subject="Verify your account")
+            message = mail.EmailMessage(sender="Trinity Tutor Support <stevenyee64@gmail.com>", subject="Verify your account")
 
             message.to = self.request.get('email')
 
