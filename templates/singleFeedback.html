@@ -4,6 +4,15 @@
       <a href="/afh/{{feedback.AFHID}}">{{AFH.title}}</a>
       
     </div>
+    <div>
+      {% if writer.name == AFH.author: %}
+        <div> TUTOR </div>
+      {% endif %}
+      {% if writer.name != AFH.author: %}
+        <div> TUTEE </div>
+      {% endif %}
+    </div>
+
     Feedback from
     <a href="/users/{{feedback.writerID}}" class="label label-warning">
       {{writer.name}}
@@ -24,8 +33,16 @@
   </div>
 
   <div class="post-content">
-    Difficulty: {{AFH.difficulty}}
-  </div>
+      {% if AFH.difficulty == 1 %}
+        Difficulty: Easy
+      {% elif AFH.difficulty == 2 %}
+        Difficulty: Medium
+      {% elif AFH.difficulty == 3 %}
+        Difficulty: Hard
+      {% elif AFH.difficulty == 4 %}
+        Difficulty: Very Hard
+      {% endif %}
+    </div>
 
   <div class="post-content">
     Comments: {{feedback.comment}}

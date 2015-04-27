@@ -316,7 +316,7 @@ class Post(db.Model):
         %s has connected with you on Trinity Tutor.<br>
         The original posting can be found <a href="http://www.trinity-tutor.appspot.com/afh/%s">here</a>.<br>
         If the link does not automatically take you to the correct page, please copy and paste this link into your address bar: <br>
-        http://www.trinity-tutor.appspot.com/confirmation/%s <br>
+        http://www.trinity-tutor.appspot.com/afh/%s <br>
         Please contact %s at %s.<br><br>
         Best, <br>
         The Trinity Tutor Team
@@ -610,7 +610,9 @@ class NewPost(Handler):
             title = self.request.get('title')
             selectedSubject = self.request.get('subjectList')
             content = self.request.get('content')
-            wage = float(self.request.get('wage'))
+            wage = None
+            if self.request.get('wage'):
+                wage = float(self.request.get('wage'))
             selectedMeetings = int(self.request.get('meetingsList'))
             selectedDifficulty = int(self.request.get('difficultyList'))
 
