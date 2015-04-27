@@ -53,7 +53,7 @@
           <div id="form-error" class="form-group has-error has-feedback">
             <input type="password" name="password" value="" class="form-control" placeholder="Password" required autofocus>
             <span class="glyphicon glyphicon-remove form-control-feedback" aria-hidden="true"></span>
-            <label class="control-label">Username OR password invalid!</label>
+            <label class="control-label">{{error}}</label>
           </div>
         {% else %}
           <div class="form-group">

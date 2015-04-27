@@ -158,7 +158,7 @@ class User(db.Model):
     @classmethod
     def login(cls, name, pw):
         u = cls.by_name(name)
-        if u and valid_pw(name, pw, u.pw_hash) and u.confirmed:
+        if u and valid_pw(name, pw, u.pw_hash):
             return u
 
     def calculateTutorRating(self, newRate):
@@ -766,13 +766,17 @@ class Login(Handler):
 
     def post(self):
         username = self.request.get('username').lower()
+        verifyCheckUser = User.by_name(username)
         password = self.request.get('password')
         u = User.login(username, password)
-        if u:
+        if u and verifyCheckUser.confirmed:
             self.login(u)
             self.redirect('/')
         else:
-            msg = 'Invalid login'
+            if u and not verifyCheckUser.confirmed:
+                msg = 'This account has not been verified with Trinity Tutor. Please check your email for a verification link.'
+            else:
+                msg = 'Either Username OR password invalid!'
             self.render('login-form.html', error = msg)
 
 class Logout(Handler):
