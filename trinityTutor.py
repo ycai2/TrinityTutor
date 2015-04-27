@@ -329,7 +329,7 @@ class Post(db.Model):
         insertAFH = self.key().id()
         insertOtherUserEmail = selectedTutor.email
         message2 = mail.EmailMessage(sender="Trinity Tutor Support <stevenyee64@gmail.com>", subject="Connection Made on Trinity Tutor")
-        message2.to = selectedTutor.email
+        message2.to = user.email
         emailPlainContent = """
         Dear %s,
         %s has connected with you on Trinity Tutor.
