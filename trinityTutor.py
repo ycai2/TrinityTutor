@@ -210,7 +210,7 @@ class Post(db.Model):
     subject = db.StringProperty(required = True)
     content = db.TextProperty(required = True)
 
-    wage = db.IntegerProperty(required = True)
+    wage = db.FloatProperty(required = True)
     meetings = db.IntegerProperty(required = True)
     difficulty = db.IntegerProperty(required = True)
 
@@ -611,7 +611,7 @@ class NewPost(Handler):
             title = self.request.get('title')
             selectedSubject = self.request.get('subjectList')
             content = self.request.get('content')
-            wage = int(self.request.get('wage'))
+            wage = float(self.request.get('wage'))
             selectedMeetings = int(self.request.get('meetingsList'))
             selectedDifficulty = int(self.request.get('difficultyList'))
 
@@ -714,8 +714,13 @@ class Register(Signup):
             insertEmail = u.email_hash
             insertName = u.nickname
             message = mail.EmailMessage(sender="Trinity Tutor Support <stevenyee64@gmail.com>", subject="Verify your account")
-            message.to = self.email
+            message.to = self.request.get('email')
+            insertEmail = u.email_hash
+            insertName = u.nickname
             bodyContent = """
+            Your Trinity Tutor account has been approved. <br>
+            Click here to verify your account. <br>
+            http://www.trinity-tutor.appspot.com/confirmation/%s <br>
             Your Trinity Tutor account has been approved. <br>
             Click here to verify your account. http://www.trinity-tutor.appspot.com/confirmation/%s <br>
             Please let us know if you have any questions. <br>
@@ -752,7 +757,6 @@ class Profile(Handler):
                 each = Feedback.get_by_id(int(thing))
                 if each:
                     feedbackText += each.render()
-
             self.render("profile.html", u = user, feedbacks = feedbackText, currentUsername = self.user.name)
 
 class Login(Handler):
@@ -762,7 +766,6 @@ class Login(Handler):
     def post(self):
         username = self.request.get('username').lower()
         password = self.request.get('password')
-
         u = User.login(username, password)
         if u:
             self.login(u)
