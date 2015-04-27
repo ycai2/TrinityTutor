@@ -1,7 +1,19 @@
 {% extends "base.html" %}
 
+{% block navbar %}
+  <li><a href="/">Home</a></li>
+  <li><a href="/newpost">New Post</a></li>
+  {% if user %}
+    <li><a href="/users/{{user.key().id()}}">Profile</a></li>
+    <li class="active"><a href="/created">Created</a></li>
+    <li><a href="/applied">Applied</a></li>
+    <li><a href="/connections">Connections</a></li>
+    <li><a href="/users">Users</a></li>
+  {% endif %}
+ {% endblock %}
+
 {% block content %}
-	<div> You created these Posts </div>
-  	{{createdText | safe}}
+  <div> You created these Posts </div>
+  {{createdText | safe}}
 
 {% endblock %}
