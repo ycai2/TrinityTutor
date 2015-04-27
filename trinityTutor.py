@@ -610,7 +610,9 @@ class NewPost(Handler):
             title = self.request.get('title')
             selectedSubject = self.request.get('subjectList')
             content = self.request.get('content')
-            wage = float(self.request.get('wage'))
+            wage = None
+            if self.request.get('wage'):
+                wage = float(self.request.get('wage'))
             selectedMeetings = int(self.request.get('meetingsList'))
             selectedDifficulty = int(self.request.get('difficultyList'))
 
