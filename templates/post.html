@@ -2,7 +2,6 @@
   <div class="post-heading">
     <h2>
       <a href="/afh/{{p.key().id()}}">{{p.title}}</a>
-      
     </h2>
     Posted by
     <a href="/users/{{p.authorID}}" class="label label-warning">
@@ -43,11 +42,11 @@
   </div>
 
   <div class="post-content">
-    {% if p.difficulty == 1 %}
+    {% if p.meetings == 1 %}
       Frequency of Meetings: Once
-    {% elif p.difficulty == 2 %}
+    {% elif p.meetings == 2 %}
       Frequency of Meetings: Several
-    {% elif p.difficulty == 3 %}
+    {% elif p.meetings == 3 %}
       Frequency of Meetings: More...
     {% endif %}
   </div>

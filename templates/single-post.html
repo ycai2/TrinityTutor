@@ -23,59 +23,69 @@
       {{p._render_text | safe}}
     </div>
   </h4>
-  <hr>
-
-  <hr>
+  <hr><hr>
     <h5>
-    <div>
-     <p> Subject: {{p.subject}}</p>
-    </div>
-     <p> Wage (USD per hour): $ {{p.wage}} </p>
+      <div>
+       <p> Subject: {{p.subject}}</p>
+      </div>
+      <div>
+       <p> Wage (USD per hour): $ {{p.wage}} </p>
+      </div>
     </h5>
 
     <div>
-      <p> Meetings (per week): {{p.meetings}} </p>
+      {% if p.meetings == 1 %}
+        <p>Frequency of Meetings: Once</p>
+      {% elif p.meetings == 2 %}
+        <p>Frequency of Meetings: Several</p>
+      {% elif p.meetings == 3 %}
+        <p>Frequency of Meetings: More...</p>
+      {% endif %}
     </div>
 
     <div>
-      <p> Difficulty: {{p.difficulty}} </p>
+      {% if p.difficulty == 1 %}
+        <p> Difficulty: Easy </p>
+      {% elif p.difficulty == 2 %}
+        <p> Difficulty: Medium </p>
+      {% elif p.difficulty == 3 %}
+        <p> Difficulty: Hard </p>
+      {% elif p.difficulty == 4 %}
+        <p> Difficulty: Very Hard </p>
+      {% endif %}
     </div>
   <hr>
-</div>
 
-{% if not p.selectedTutor: %}
-  <div> Respondent Profiles </div>
+  {% if not p.selectedTutor: %}
+    <div> Respondent Profiles </div>
+    <br>
+    {{respondentText | safe}}
+  {% endif %}
+
+  {% if p.selectedTutor: %}
+    <div> Selected Tutor: <a href="/users/{{p.selectedTutorID}}">{{p.selectedTutor}} </a> </div>
+  {% endif %}
+
+  <hr><hr>
+
+  <div> LIST OF COMMENTS </div>
+  <br>
+    {{commentText | safe}}
   <br>
 
-  {{respondentText | safe}}
+  {% if not p.selectedTutor: %}
+  <form method="post" class="jumbotron">
+    <input type="submit" name="apply" class="btn btn-primary" value="Apply for this position now"></input>
+    <br><br>
 
-{% endif %}
-
-{% if p.selectedTutor: %}
-  <div> Selected Tutor: <a href="/users/{{p.selectedTutorID}}">{{p.selectedTutor}} </a> </div>
-{% endif %}
-
-<hr><hr>
-
-
-<div> LIST OF COMMENTS </div>
-<br>
-{{commentText | safe}}
-<br>
-
-{% if not p.selectedTutor: %}
-<form method="post" class="jumbotron">
-  <input type="submit" name="apply" class="btn btn-primary" value="Apply for this position now"></input>
-  <br><br>
-
-  <div>
-    <b>Comment</b>
-  </div>
-  <textarea class="form-control" name="content" rows="7" placeholder="(HTML formatting available)">{{content}}</textarea>
-  <div class="error">{{error}}</div>
-  <br><br>
-  <input type="submit" class="btn btn-primary">
-</form>
-{% endif %}
+    <div>
+      <b>Comment</b>
+    </div>
+    <textarea class="form-control" name="content" rows="7" placeholder="(HTML formatting available)">{{content}}</textarea>
+    <div class="error">{{error}}</div>
+    <br><br>
+    <input type="submit" class="btn btn-primary">
+  </form>
+  {% endif %}
 
 </div>
