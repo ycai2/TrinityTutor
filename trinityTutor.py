@@ -210,7 +210,7 @@ class Post(db.Model):
     subject = db.StringProperty(required = True)
     content = db.TextProperty(required = True)
 
-    wage = db.IntegerProperty(required = True)
+    wage = db.FloatProperty(required = True)
     meetings = db.IntegerProperty(required = True)
     difficulty = db.IntegerProperty(required = True)
 
@@ -293,6 +293,70 @@ class Post(db.Model):
         secondConnection.put()
         selectedTutor.connectionList.append(str(secondConnection.key().id()))
         selectedTutor.put()
+
+
+        insertName = selectedTutor.nickname
+        inserOtherUserName = user.name
+        insertAFH = self.key().id()
+        insertOtherUserEmail = user.email
+        message1 = mail.EmailMessage(sender="Trinity Tutor Support <stevenyee64@gmail.com>", subject="Connection Made on Trinity Tutor")
+        message1.to = selectedTutor.email
+        emailPlainContent = """
+        Dear %s,
+        %s has connected with you on Trinity Tutor.
+        The original posting can be found here <http://www.trinity-tutor.appspot.com/afh/%s>
+        Please contact %s at %s.
+        Best,
+        The Trinity Tutor Team
+        """
+        message1.body = emailPlainContent % (insertName, inserOtherUserName, insertAFH, inserOtherUserName, insertOtherUserEmail)
+        emailHTMLContent = """
+        <html><head></head><body>
+        Dear %s, <br><br>
+        %s has connected with you on Trinity Tutor.<br>
+        The original posting can be found <a href="http://www.trinity-tutor.appspot.com/afh/%s">here</a>.<br>
+        If the link does not automatically take you to the correct page, please copy and paste this link into your address bar: <br>
+        http://www.trinity-tutor.appspot.com/confirmation/%s <br>
+        Please contact %s at %s.<br><br>
+        Best, <br>
+        The Trinity Tutor Team
+        </body></html>
+        """
+        message1.html = emailHTMLContent % (insertName, inserOtherUserName, insertAFH, insertAFH, inserOtherUserName, insertOtherUserEmail)
+        message1.send()
+
+
+        insertName = user.nickname
+        inserOtherUserName = selectedTutor.name
+        insertAFH = self.key().id()
+        insertOtherUserEmail = selectedTutor.email
+        message2 = mail.EmailMessage(sender="Trinity Tutor Support <stevenyee64@gmail.com>", subject="Connection Made on Trinity Tutor")
+        message2.to = user.email
+        emailPlainContent = """
+        Dear %s,
+        %s has connected with you on Trinity Tutor.
+        The original posting can be found here <http://www.trinity-tutor.appspot.com/afh/%s>
+        Please contact %s at %s.
+        Best,
+        The Trinity Tutor Team
+        """
+        print "TESTING EMEAIL"
+        message2.body = emailPlainContent % (insertName, inserOtherUserName, insertAFH, inserOtherUserName, insertOtherUserEmail)
+        emailHTMLContent = """
+        <html><head></head><body>
+        Dear %s, <br><br>
+        %s has connected with you on Trinity Tutor.<br>
+        The original posting can be found <a href="http://www.trinity-tutor.appspot.com/afh/%s">here</a>.<br>
+        If the link does not automatically take you to the correct page, please copy and paste this link into your address bar: <br>
+        http://www.trinity-tutor.appspot.com/afh/%s <br>
+        Please contact %s at %s.<br><br>
+        Best, <br>
+        The Trinity Tutor Team
+        </body></html>
+        """
+        message2.html = emailHTMLContent % (insertName, inserOtherUserName, insertAFH, insertAFH, inserOtherUserName, insertOtherUserEmail)
+        message2.send()
+
         
     def selectTutor(self, user):
         self.exchangeContact(user)
@@ -547,7 +611,7 @@ class NewPost(Handler):
             title = self.request.get('title')
             selectedSubject = self.request.get('subjectList')
             content = self.request.get('content')
-            wage = int(self.request.get('wage'))
+            wage = float(self.request.get('wage'))
             selectedMeetings = int(self.request.get('meetingsList'))
             selectedDifficulty = int(self.request.get('difficultyList'))
 
@@ -587,16 +651,12 @@ class Signup(Handler):
         self.username = self.request.get('username')
         self.password = self.request.get('password')
         self.verify = self.request.get('verify')
-
         if '@' not in self.request.get('email'):
             self.email = self.request.get('email')+'@trincoll.edu'
             
         else: 
             self.email = self.request.get('email')
             have_email_error = True
-
-
-
         self.email_hash = make_email_hash(self.email)
         self.name = self.request.get('name')
         self.year = self.request.get('year')
@@ -640,8 +700,7 @@ class Signup(Handler):
 class Register(Signup):
     def done(self, **params):
         u = User.by_name(self.username)
-        emailCheck = User.all().filter('email =', self.email)
-        print self.email
+        emailCheck = User.all().filter('email =', self.email).get()
         if u:
             msg = 'That user already exists.'
             self.render('signup-form.html', error_username = msg, **params)
@@ -652,40 +711,36 @@ class Register(Signup):
             u = User.register(self.username.lower(), self.password, self.email.lower(), self.name, self.year, self.major, self.description)
             u.put()
 
-            message = mail.EmailMessage(sender="Trinity Tutor Support <stevenyee64@gmail.com>",
-                      subject="Verify your account")
-
-            message.to = self.request.get('email')
-
-            message.body = """
-
-            Your Trinity Tutor account has been approved. <br>
-
-            Click here to verify your account. <br>
-
-            Please let us know if you have any questions. <br>
-
-            The Trinity Tutor Team
-            """
-
             insertEmail = u.email_hash
             insertName = u.nickname
+            message = mail.EmailMessage(sender="Trinity Tutor Support <stevenyee64@gmail.com>", subject="Verify your account")
+            message.to = self.request.get('email')
+            insertEmail = u.email_hash
+            insertName = u.nickname
+            bodyContent = """
+            Your Trinity Tutor account has been approved. <br>
+            Click here to verify your account. <br>
+            http://www.trinity-tutor.appspot.com/confirmation/%s <br>
+            Your Trinity Tutor account has been approved. <br>
+            Click here to verify your account. http://www.trinity-tutor.appspot.com/confirmation/%s <br>
+            Please let us know if you have any questions. <br>
+            The Trinity Tutor Team
+            """
+            message.body = bodyContent % insertEmail
             emailContent = """
             <html><head></head><body>
             Dear %s, <br><br>
-
             Your Trinity Tutor account has been approved. <br>
-
             Please let us know if you have any questions.<br>
-
-            <a href="http://www.trinity-tutor.appspot.com/confirmation/%s">Click here to verify your account.</a> <br><br>
-
+            <a href="http://www.trinity-tutor.appspot.com/confirmation/%s">Click here to verify your account.</a><br>
+            If the link does not automatically take you to the correct page, please copy and paste this link into your address bar: <br>
+            http://www.trinity-tutor.appspot.com/confirmation/%s
+            <br><br>
             Best, <br>
             The Trinity Tutor Team
-
             </body></html>
             """
-            message.html = emailContent % (insertName, insertEmail)
+            message.html = emailContent % (insertName, insertEmail, insertEmail)
             message.send()
 
             self.redirect('/')
@@ -702,7 +757,6 @@ class Profile(Handler):
                 each = Feedback.get_by_id(int(thing))
                 if each:
                     feedbackText += each.render()
-
             self.render("profile.html", u = user, feedbacks = feedbackText, currentUsername = self.user.name)
 
 class Login(Handler):
@@ -712,7 +766,6 @@ class Login(Handler):
     def post(self):
         username = self.request.get('username').lower()
         password = self.request.get('password')
-
         u = User.login(username, password)
         if u:
             self.login(u)
