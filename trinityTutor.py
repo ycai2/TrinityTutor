@@ -340,7 +340,6 @@ class Post(db.Model):
         Best,
         The Trinity Tutor Team
         """
-        print "TESTING EMEAIL"
         message2.body = emailPlainContent % (insertName, inserOtherUserName, insertAFH, inserOtherUserName, insertOtherUserEmail)
         emailHTMLContent = """
         <html><head></head><body>
@@ -714,7 +713,7 @@ class Register(Signup):
             insertEmail = u.email_hash
             insertName = u.nickname
             message = mail.EmailMessage(sender="Trinity Tutor Support <stevenyee64@gmail.com>", subject="Verify your account")
-            message.to = self.request.get('email')
+            message.to = self.email
             insertEmail = u.email_hash
             insertName = u.nickname
             bodyContent = """
@@ -726,7 +725,7 @@ class Register(Signup):
             Please let us know if you have any questions. <br>
             The Trinity Tutor Team
             """
-            message.body = bodyContent % insertEmail
+            message.body = bodyContent % (insertEmail, insertEmail)
             emailContent = """
             <html><head></head><body>
             Dear %s, <br><br>
