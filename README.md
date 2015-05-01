@@ -34,11 +34,12 @@ Deployment instructions:
 
 Terminal Run instructions:
 ===========================
-1. cd into the Trinity Tutor folder.
-2. Execute the following command: dev_appserver.py --enable_sendmail=yes app.yaml
+1. First you must have Google App Engine installed.
+2. cd into the Trinity Tutor folder.
+3. Execute the following command: dev_appserver.py --enable_sendmail=yes app.yaml
 	This will run Trinity Tutor on localhost:8000
 	The administrative server will run on localhost:8080
-3. If sendmail is not working properly, the confirmation emails will not be sent out and you will not be able to validate your account. If the email is sent, please ignore the confirmation link as it is configured to work for the deployed site which can be found at http://trinity-tutor.appspot.com . Proceed to Step 4.
-4. However, you can “manually” validate your account after you register it by visiting localhost:8080. Select the user account from Datastore Viewer by listing User Entities. Copy the hashed email of the user account to your clipboard. Then enter localhost:8080/confirmation/ + the hashed email you just copied. Click on the button to verify the user account. This will verify the user account and give it full access to Trinity Tutor.
+4. If sendmail is not working properly, the confirmation emails will not be sent out and you will not be able to validate your account. If the email is sent, please ignore the confirmation link as it is configured to work for the deployed site which can be found at http://trinity-tutor.appspot.com . Proceed to Step 4.
+5. However, you can “manually” validate your account after you register it by visiting localhost:8080. Select the user account from Datastore Viewer by listing User Entities. Copy the hashed email of the user account to your clipboard. Then enter localhost:8080/confirmation/ + the hashed email you just copied. Click on the button to verify the user account. This will verify the user account and give it full access to Trinity Tutor.
 
 
