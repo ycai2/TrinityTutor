@@ -387,8 +387,11 @@ class Applied(Handler):
             self.redirect('/login')
 
 class Front(Handler):
+    def weekAgo(self):
+        return datetime.now() - timedelta(seconds = (7 * 24 * 60 * 60))
+
     def get(self):
-        posts = greetings = Post.all().order('-created')
+        posts = Post.all().filter("created >", self.weekAgo()).order('-created')
         self.render('front.html', posts = posts)
 
     def post(self):
@@ -397,17 +400,16 @@ class Front(Handler):
         print subject
         print sorting
         if (sorting != 'None') and (subject != 'None'):
-            posts = greetings = Post.all().filter('subject =', subject).order('-%s' % sorting)
+            posts = greetings = Post.all().filter('subject =', subject).filter("created >", self.weekAgo()).order('-%s' % sorting)
 
         if (subject == 'None') and (sorting == 'None'):
-            print 'chee'
-            posts = greetings = Post.all().order('-created')
+            posts = greetings = Post.all().filter("created >", self.weekAgo()).order('-created')
         
         elif subject == 'None':
-            posts = greetings = Post.all().order('-%s' % sorting)
+            posts = greetings = Post.all().filter("created >", self.weekAgo()).order('-%s' % sorting)
 
         elif sorting == 'None':
-            posts = greetings = Post.all().filter('subject =', subject).order('-created')
+            posts = greetings = Post.all().filter('subject =', subject).filter("created >", self.weekAgo()).order('-created')
 
 
         self.render('front.html', posts = posts, subjectTag = subject, sortingTag = sorting)    
