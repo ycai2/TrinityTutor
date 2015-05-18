@@ -683,6 +683,14 @@ class Signup(Handler):
             params['error_verify'] = "Your passwords didn't match."
             have_error = True
 
+        elif not (self.year.isdigit()):
+            params['error_year'] = "Your class year must be an integer."
+            have_error = True
+
+        elif ((int(self.year) < 2014) or (int(self.year) > 2020)):
+            params['error_year'] = "Your class year must be an integer between 2014 and 2020."
+            have_error = True
+
         if (not valid_email(self.email)) or have_email_error:
             params['error_email'] = "That's not a valid email."
             have_error = True
@@ -751,6 +759,7 @@ class Profile(Handler):
         if not self.user:
             self.redirect("/login")
         else:
+            ownerFlag = False
             feedbacks = user.feedbackList
             feedbackText = ""
             for thing in feedbacks:
@@ -759,10 +768,7 @@ class Profile(Handler):
                     feedbackText += each.render()
             if self.user.name == user.name:
                 ownerFlag = True
-                self.render("profile.html", u = user, feedbacks = feedbackText, currentUsername = self.user.name, ownerFlag = ownerFlag)
-            else:
-                ownerFlag = False
-                self.render("profile.html", u = user, feedbacks = feedbackText, currentUsername = self.user.name, ownerFlag = ownerFlag)
+            self.render("profile.html", u = user, feedbacks = feedbackText, currentUsername = self.user.name, ownerFlag = ownerFlag)
 
 class EditProfile(Handler):
     def get(self):
@@ -803,6 +809,14 @@ class EditProfile(Handler):
                 params['error_verify'] = "Your passwords didn't match."
                 have_error = True
 
+            elif not (self.year.isdigit()):
+                params['error_year'] = "Your class year must be an integer."
+                have_error = True
+
+            elif ((int(self.year) < 2014) or (int(self.year) > 2020)):
+                params['error_year'] = "Your class year must be an integer between 2014 and 2020."
+                have_error = True
+
             if have_error:
                 self.render('editableProfile.html', **params)
 
@@ -812,7 +826,7 @@ class EditProfile(Handler):
     def done(self, **params):
         user = User.by_id(int(self.id))
         user.password = self.password
-        user.name = self.name
+        user.nickname = self.name
         user.year = int(self.year)
         user.major = self.major
         user.description = self.description

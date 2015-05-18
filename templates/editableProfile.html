@@ -13,7 +13,7 @@
   {% block content %}
     <div class="container">
       <form method="post" class="form-signin">
-        <h2>Edit Profile</h2>
+        <h2>Edit Profile of {{u.name}}</h2>
         <hr><hr>
         <div>Note that you must enter a new (possibly the same) password to change any information here</div>
 
@@ -34,7 +34,7 @@
             <div id="form-error" class="form-group has-error has-feedback">              
               <input type="password" name="verify" value="" class="form-control" placeholder="Confirm Password" required autofocus>
               <span class="glyphicon glyphicon-remove form-control-feedback" aria-hidden="true"></span>
-              <label class="control-label">{{error_verify}}}</label>
+              <label class="control-label">{{error_verify}}</label>
             </div>
           {% else %}
             <div class="form-group">
@@ -43,22 +43,43 @@
           {% endif %}
 
           <div class="form-group">
+            <div>Name</div>
             <input type="text" name="name" value="{{u.nickname}}" class="form-control" placeholder="{{u.nickname}}" required autofocus>
           </div>
 
-          <div class="form-group">
-            Class Year
-            <select name="year" required>
-              <option value="{{u.year}}" selected>{{u.year}}</option>
-              <option value="2014">2014</option>
-              <option value="2015">2015</option>
-              <option value="2016">2016</option>
-              <option value="2017">2017</option>
-              <option value="2018">2018</option>
-              <option value="2019">2019</option>
-              <option value="2020">2020</option>
-            </select>
-          </div>
+          {% if error_year %}
+            <div id="form-error" class="form-group has-error has-feedback">              
+              <div class="form-group">
+              Class Year
+              <select name="year" required autofocus>
+                <option value="{{u.year}}" selected>{{u.year}}</option>
+                <option value="2014">2014</option>
+                <option value="2015">2015</option>
+                <option value="2016">2016</option>
+                <option value="2017">2017</option>
+                <option value="2018">2018</option>
+                <option value="2019">2019</option>
+                <option value="2020">2020</option>
+              </select>
+              </div>
+              <span class="glyphicon glyphicon-remove form-control-feedback" aria-hidden="true"></span>
+              <label class="control-label">{{error_year}}</label>
+            </div>
+          {% else %}
+            <div class="form-group">
+              Class Year
+              <select name="year" required autofocus>
+                <option value="{{u.year}}" selected>{{u.year}}</option>
+                <option value="2014">2014</option>
+                <option value="2015">2015</option>
+                <option value="2016">2016</option>
+                <option value="2017">2017</option>
+                <option value="2018">2018</option>
+                <option value="2019">2019</option>
+                <option value="2020">2020</option>
+              </select>
+            </div>
+          {% endif %}
 
           <div class="form-group">
             Major
@@ -103,6 +124,9 @@
             </select>
           </div>
 
+          <div>
+            Description
+          </div>
           <div class="form-group">
             <input type="text" name="description" value="{{u.description}}" class="form-control" placeholder="{{u.description}}" autofocus>
           </div>
