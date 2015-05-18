@@ -620,7 +620,7 @@ class EditPost(Handler):
             self.error(404)
         else:
             if self.user:
-                if post.selectedTutor:
+                if not post.selectedTutor:
                     if (self.user.key().id() == int(post.authorID)):
                         title = self.request.get('title')
                         subject = self.request.get('subjectList')
@@ -683,11 +683,15 @@ class DeletePost(Handler):
             self.redirect('/myaccount')
         else:   
             if self.user:
-                if (self.user.key().id() == int(post.authorID)):
-                    owner = User.by_id(int(post.authorID))
-                    self.render("deletePost.html", p = post, owner = owner)
+                if not post.selectedTutor:
+                    if (self.user.key().id() == int(post.authorID)):
+                        owner = User.by_id(int(post.authorID))
+                        self.render("deletePost.html", p = post, owner = owner)
+                    else:
+                        self.render("permalink.html", post = post)
                 else:
-                    self.render("permalink.html", post = post)
+                    #You have already selected someone so you can't change delete this post
+                    self.redirect('/afh/%s' % post_id)
             else:
                 self.redirect("/login")
 
@@ -698,11 +702,15 @@ class DeletePost(Handler):
             self.redirect('/myaccount')
         else:   
             if self.user:
-                if (self.user.key().id() == int(post.authorID)):
-                    post.delete()
-                    self.redirect('/myaccount')
+                if not post.selectedTutor:
+                    if (self.user.key().id() == int(post.authorID)):
+                        post.delete()
+                        self.redirect('/myaccount')
+                    else:
+                        self.render("permalink.html", post = post)
                 else:
-                    self.render("permalink.html", post = post)
+                    #You have already selected someone so you can't change delete this post
+                    self.redirect('/afh/%s' % post_id)
             else:
                 self.redirect("/login")
 
@@ -724,8 +732,8 @@ class NewPost(Handler):
             wageVerify = True
             meetingsVerify = True
             difficultyVerify = True
-            error_meetings = None
-            error_difficulty = None
+            error_meetings = ""
+            error_difficulty = ""
             try:
                 float(wage)
                 wageVerify = True
@@ -748,10 +756,14 @@ class NewPost(Handler):
             if title and subject and content and wageVerify and meetingsVerify and difficultyVerify:
                 post = Post(parent = _key(), title = title, subject = subject, content = content, wage = float(wage), meetings = int(meetings), difficulty = int(difficulty), author = self.user.name, authorID = str(self.user.key().id()))
                 post.put()
+
+                self.user.createdList.append(str(post.key().id()))
+                self.user.put()
+
                 self.redirect('/afh/%s' % str(post.key().id()))
             else:
                 error = "Enter information in the required fields! Some of your information may have been reset to default values!"
-                self.render("newpost.html", title = title, subject=subject, content=content, wage = wage, error_meetings=error_meetings, error_difficulty=error_difficulty)
+                self.render("newpost.html", title = title, subject=subject, content=content, wage = wage, error_meetings=error_meetings, error_difficulty=error_difficulty, error = error)
         else:
             self.redirect('/login')
 
@@ -951,6 +963,8 @@ class EditProfile(Handler):
     def done(self, **params):
         user = User.by_id(int(self.id))
         user.password = self.password
+        pw_hash = make_pw_hash(user.name, user.password)
+        user.pw_hash = pw_hash
         user.nickname = self.name
         user.year = int(self.year)
         user.major = self.major
