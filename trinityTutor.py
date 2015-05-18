@@ -112,14 +112,11 @@ class User(db.Model):
     year = db.IntegerProperty(required = True)
     major = db.StringProperty(required = True)
     description = db.StringProperty()
-    confirmed = db.BooleanProperty(required = True)
-
-    
+    confirmed = db.BooleanProperty(required = True) 
     tutorRating = db.FloatProperty()
     numberTutorJobs = db.IntegerProperty(required = True)
     tuteeRating = db.FloatProperty()
     numberTuteeJobs = db.IntegerProperty(required = True)
-    
 
     feedbackList = db.ListProperty(str, indexed = True, default=[])
     connectionList = db.ListProperty(str, indexed = True, default=[])
@@ -129,12 +126,11 @@ class User(db.Model):
     @classmethod
     def by_id(cls, uid):
         return User.get_by_id(uid, parent = users_key())
-
     
     @classmethod
     def by_name(cls, name):
-        u = User.all().filter('name =', name).get()
-        return u
+        user = User.all().filter('name =', name).get()
+        return user
 
     @classmethod
     def register(cls, name, pw, email, nickname, year, major, description):
@@ -157,27 +153,27 @@ class User(db.Model):
 
     @classmethod
     def login(cls, name, pw):
-        u = cls.by_name(name)
-        if u and valid_pw(name, pw, u.pw_hash):
-            return u
+        user = cls.by_name(name)
+        if user and valid_pw(name, pw, user.pw_hash):
+            return user
 
-    def calculateTutorRating(self, newRate):
-        thisUser = self
-        oldRating = thisUser.numberTutorJobs * thisUser.tutorRating
-        thisUser.numberTutorJobs = thisUser.numberTutorJobs + 1
-        thisUser.tutorRating = (oldRating + newRate)/thisUser.numberTutorJobs
-        thisUser.put()
+    def calculateTutorRating(self, newRating):
+        user = self
+        oldRating = user.numberTutorJobs * user.tutorRating
+        user.numberTutorJobs = user.numberTutorJobs + 1
+        user.tutorRating = (oldRating + newRating) / user.numberTutorJobs
+        user.put()
 
-    def calculateTuteeRating(self, newRate):
-        thisUser = self
-        oldRating = thisUser.numberTuteeJobs * thisUser.tuteeRating
-        thisUser.numberTuteeJobs = thisUser.numberTuteeJobs + 1
-        thisUser.tuteeRating = (oldRating + newRate)/thisUser.numberTuteeJobs
-        thisUser.put()
+    def calculateTuteeRating(self, newRating):
+        user = self
+        oldRating = user.numberTuteeJobs * user.tuteeRating
+        user.numberTuteeJobs = user.numberTuteeJobs + 1
+        user.tuteeRating = (oldRating + newRating) / user.numberTuteeJobs
+        user.put()
 
     def render(self):
         # self._render_text = self.content.replace('\n', '<br>')
-        return render_str("users.html", p = self)
+        return render_str("users.html", user = self)
 
     def renderRespondent(self):
         return render_str("singleRespondent.html", user = self)
@@ -209,11 +205,9 @@ class Post(db.Model):
     title = db.StringProperty(required = True)
     subject = db.StringProperty(required = True)
     content = db.TextProperty(required = True)
-
     wage = db.FloatProperty(required = True)
     meetings = db.IntegerProperty(required = True)
     difficulty = db.IntegerProperty(required = True)
-
     author = db.StringProperty(required = True)
     authorID = db.StringProperty(required = True)
     created = db.DateTimeProperty(auto_now_add = True)
@@ -221,13 +215,11 @@ class Post(db.Model):
     #+datetime.timedelta(hours=8)
     selectedTutor = db.StringProperty()
     selectedTutorID = db.StringProperty()
-
     feedbackOnTutee = db.BooleanProperty()
     feedbackOnTutor = db.BooleanProperty()
 
     respondentNameList = db.ListProperty(str, indexed = True, default=[])
     respondentIDList = db.ListProperty(str, indexed = True, default=[])
-
     commentIDList = db.ListProperty(str, indexed = True, default=[])
 
     @classmethod
@@ -235,9 +227,9 @@ class Post(db.Model):
         return Post.get_by_id(uid, parent = _key())
 
     def render(self):
-        self._render_text = self.content.replace('\n', '<br>')
+        #self._render_text = self.content.replace('\n', '<br>')
         owner = User.by_id(int(self.authorID))
-        return render_str("post.html", p = self, owner = owner)
+        return render_str("post.html", post = self, owner = owner)
 
     def render_page(self):
         self._render_text = self.content.replace('\n', '<br>')
@@ -252,13 +244,13 @@ class Post(db.Model):
         commentIDList = self.commentIDList
         commentText = ""
         for commentID in commentIDList:
-            comment = Comment.get_by_id(int(commentID))
+            comment = Comment.by_id(int(commentID))
             if comment:
                 commentText += comment.render()
 
         owner = User.by_id(int(self.authorID))
 
-        return render_str("single-post.html", p = self, commentText = commentText, respondentNameList = self.respondentNameList, respondentText = respondentText, owner = owner)
+        return render_str("single-post.html", post = self, commentText = commentText, respondentText = respondentText, owner = owner)
 
     def render_ownerPage(self):
         self._render_text = self.content.replace('\n', '<br>')
@@ -273,7 +265,7 @@ class Post(db.Model):
         commentIDList = self.commentIDList
         commentText = ""
         for commentID in commentIDList:
-            comment = Comment.get_by_id(int(commentID))
+            comment = Comment.by_id(int(commentID))
             if comment:
                 commentText += comment.render()
        
@@ -281,84 +273,57 @@ class Post(db.Model):
 
         return render_str("owner-single-post.html", p = self, commentText = commentText, respondentNameList = self.respondentNameList, respondentText = respondentText, owner = owner)
 
+    def sendConnectionEmail(self, receiver, sender, postID):
+        receiverName = receiver.nickname
+        receiverEmail = receiver.email
+        senderUsername = sender.name
+        senderEmail = sender.email
+
+        message = mail.EmailMessage(sender="Trinity Tutor Support <trinitytutortt@gmail.com>", subject="Connection Made on Trinity Tutor")
+        message.to = receiverEmail
+        emailPlainContent = """
+        Dear %s,
+        %s has connected with you on Trinity Tutor.
+        The original posting can be found here <http://www.trinity-tutor.appspot.com/afh/%s>
+        Please contact %s at %s.
+        Best,
+        The Trinity Tutor Team
+        """
+        message.body = emailPlainContent % (receiverName, senderUsername, postID, senderUsername, senderEmail)
+        emailHTMLContent = """
+        <html><head></head><body>
+        Dear %s, <br><br>
+        %s has connected with you on Trinity Tutor.<br>
+        The original posting can be found <a href="http://www.trinity-tutor.appspot.com/afh/%s">here</a>.<br>
+        If the link does not automatically take you to the correct page, please copy and paste this link into your address bar: <br>
+        http://www.trinity-tutor.appspot.com/afh/%s <br>
+        Please contact %s at %s.<br><br>
+        Best, <br>
+        The Trinity Tutor Team
+        </body></html>
+        """
+        message.html = emailHTMLContent % (receiverName, senderUsername, postID, postID, senderUsername, senderEmail)
+        message.send()
+
     def exchangeContact(self, user):
         selectedTutor = User.by_name(self.selectedTutor)
         selectedTutorID = selectedTutor.key().id()
         userID = user.key().id()
-        firstConnection = Connection(otherUserID = str(selectedTutorID), AFHID = str(self.key().id()))
+        postID = str(self.key().id())
+        firstConnection = Connection(parent = connections_key(), otherUserID = str(selectedTutorID), AFHID = postID)
         firstConnection.put()
         user.connectionList.append(str(firstConnection.key().id()))
         user.put()
-        secondConnection = Connection(otherUserID = str(userID), AFHID = str(self.key().id()))
+        secondConnection = Connection(parent = connections_key(), otherUserID = str(userID), AFHID = postID)
         secondConnection.put()
         selectedTutor.connectionList.append(str(secondConnection.key().id()))
         selectedTutor.put()
 
+        self.sendConnectionEmail(selectedTutor, user, postID)
+        self.sendConnectionEmail(user, selectedTutor, postID)
 
-        insertName = selectedTutor.nickname
-        inserOtherUserName = user.name
-        insertAFH = self.key().id()
-        insertOtherUserEmail = user.email
-        message1 = mail.EmailMessage(sender="Trinity Tutor Support <stevenyee64@gmail.com>", subject="Connection Made on Trinity Tutor")
-        message1.to = selectedTutor.email
-        emailPlainContent = """
-        Dear %s,
-        %s has connected with you on Trinity Tutor.
-        The original posting can be found here <http://www.trinity-tutor.appspot.com/afh/%s>
-        Please contact %s at %s.
-        Best,
-        The Trinity Tutor Team
-        """
-        message1.body = emailPlainContent % (insertName, inserOtherUserName, insertAFH, inserOtherUserName, insertOtherUserEmail)
-        emailHTMLContent = """
-        <html><head></head><body>
-        Dear %s, <br><br>
-        %s has connected with you on Trinity Tutor.<br>
-        The original posting can be found <a href="http://www.trinity-tutor.appspot.com/afh/%s">here</a>.<br>
-        If the link does not automatically take you to the correct page, please copy and paste this link into your address bar: <br>
-        http://www.trinity-tutor.appspot.com/afh/%s <br>
-        Please contact %s at %s.<br><br>
-        Best, <br>
-        The Trinity Tutor Team
-        </body></html>
-        """
-        message1.html = emailHTMLContent % (insertName, inserOtherUserName, insertAFH, insertAFH, inserOtherUserName, insertOtherUserEmail)
-        message1.send()
-
-
-        insertName = user.nickname
-        inserOtherUserName = selectedTutor.name
-        insertAFH = self.key().id()
-        insertOtherUserEmail = selectedTutor.email
-        message2 = mail.EmailMessage(sender="Trinity Tutor Support <stevenyee64@gmail.com>", subject="Connection Made on Trinity Tutor")
-        message2.to = user.email
-        emailPlainContent = """
-        Dear %s,
-        %s has connected with you on Trinity Tutor.
-        The original posting can be found here <http://www.trinity-tutor.appspot.com/afh/%s>
-        Please contact %s at %s.
-        Best,
-        The Trinity Tutor Team
-        """
-        message2.body = emailPlainContent % (insertName, inserOtherUserName, insertAFH, inserOtherUserName, insertOtherUserEmail)
-        emailHTMLContent = """
-        <html><head></head><body>
-        Dear %s, <br><br>
-        %s has connected with you on Trinity Tutor.<br>
-        The original posting can be found <a href="http://www.trinity-tutor.appspot.com/afh/%s">here</a>.<br>
-        If the link does not automatically take you to the correct page, please copy and paste this link into your address bar: <br>
-        http://www.trinity-tutor.appspot.com/afh/%s <br>
-        Please contact %s at %s.<br><br>
-        Best, <br>
-        The Trinity Tutor Team
-        </body></html>
-        """
-        message2.html = emailHTMLContent % (insertName, inserOtherUserName, insertAFH, insertAFH, inserOtherUserName, insertOtherUserEmail)
-        message2.send()
-
-        
-    def selectTutor(self, user):
-        self.exchangeContact(user)
+def feedbacks_key(group = 'default'):
+    return db.Key.from_path('feedbacks', group)
 
 class Feedback(db.Model):
     receiverID = db.StringProperty(required = True)
@@ -368,21 +333,39 @@ class Feedback(db.Model):
     comment = db.StringProperty()
     created = db.DateTimeProperty(auto_now_add = True)
 
+    @classmethod
+    def by_id(cls, fid):
+        return Feedback.get_by_id(fid, parent = feedbacks_key())
+
     def render(self):
         return render_str("singleFeedback.html", feedback = self, receiver = User.by_id(int(self.receiverID)), writer = User.by_id(int(self.writerID)), AFH = Post.by_id(int(self.AFHID)))
+
+def comments_key(group = 'default'):
+    return db.Key.from_path('comments', group)
 
 class Comment(db.Model):
     content = db.TextProperty(required = True)
     author = db.StringProperty(required = True)
     created = db.DateTimeProperty(auto_now_add = True)
 
+    @classmethod
+    def by_id(cls, cid):
+        return Comment.get_by_id(cid, parent = comments_key())
+
     def render(self):
         return render_str("singleComment.html", comment = self)
+
+def connections_key(group = 'default'):
+    return db.Key.from_path('connections', group)
 
 class Connection(db.Model):
     otherUserID = db.StringProperty(required = True)
     AFHID = db.StringProperty(required = True)
     created = db.DateTimeProperty(auto_now_add = True)
+
+    @classmethod
+    def by_id(cls, cid):
+        return Connection.get_by_id(cid, parent = connections_key())
 
     def render(self):
         return render_str("singleConnection.html", connection = self, user = User.by_id(int(self.otherUserID)), AFH = Post.by_id(int(self.AFHID)))
@@ -460,7 +443,7 @@ class ConnectionsPage(Handler):
                 connectionText = ""
                 print connectionList
                 for connectionID in connectionList:
-                    connection = Connection.get_by_id(int(connectionID))
+                    connection = Connection.by_id(int(connectionID))
                     if connection:
                         connectionText += connection.render()
                 self.render("connections.html", p = self, connectionText = connectionText)
@@ -499,7 +482,7 @@ class FeedbackPage(Handler):
 
             if rating:
                 if self.user.name == post.author:
-                    f = Feedback(receiverID = post.selectedTutorID, writerID = str(self.user.key().id()), AFHID = str(post_id), rating = rating, comment = comment)
+                    f = Feedback(parent = feedbacks_key(), receiverID = post.selectedTutorID, writerID = str(self.user.key().id()), AFHID = str(post_id), rating = rating, comment = comment)
                     f.put()
                     user = User.by_id(int(post.selectedTutorID))
                     user.feedbackList.append(str(f.key().id()))
@@ -509,7 +492,7 @@ class FeedbackPage(Handler):
                     post.put()
 
                 else:
-                    f = Feedback(receiverID = post.authorID, writerID = post.selectedTutorID, AFHID = str(post_id), rating = rating, comment = comment)
+                    f = Feedback(parent = feedbacks_key(), receiverID = post.authorID, writerID = post.selectedTutorID, AFHID = str(post_id), rating = rating, comment = comment)
                     f.put()
                     user = User.by_id(int(post.authorID))
                     user.feedbackList.append(str(f.key().id()))
@@ -559,7 +542,7 @@ class PostPage(Handler):
                     thisAFH.selectedTutor = selected
                     thisAFH.selectedTutorID = str(User.by_name(selected).key().id())
                     thisAFH.put()
-                    thisAFH.selectTutor(self.user)
+                    thisAFH.exchangeContact(self.user)
                     self.redirect('/connections')
                 else:
                     self.redirect('/afh/%s' % str(post_id))
@@ -588,7 +571,7 @@ class PostPage(Handler):
                 else:
                     if content:
                         created = datetime.now() - timedelta(hours=5)
-                        comment = Comment(created = created, content = content, author = self.user.name)
+                        comment = Comment(parent = comments_key(), created = created, content = content, author = self.user.name)
                         comment.put()
                         post.commentIDList.append(str(comment.key().id()))
                         post.put()
@@ -900,7 +883,7 @@ class Profile(Handler):
             feedbacks = user.feedbackList
             feedbackText = ""
             for thing in feedbacks:
-                each = Feedback.get_by_id(int(thing))
+                each = Feedback.by_id(int(thing))
                 if each:
                     feedbackText += each.render()
             if self.user.name == user.name:

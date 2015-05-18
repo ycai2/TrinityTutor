@@ -1,11 +1,11 @@
 <div class="post">
   <div class="post-heading">
     <h2>
-      <a href="/afh/{{p.key().id()}}">{{p.title}}</a>
+      <a href="/afh/{{post.key().id()}}">{{post.title}}</a>
     </h2>
     Posted by
-    <a href="/users/{{p.authorID}}" class="label label-warning">
-      {{p.author}}
+    <a href="/users/{{post.authorID}}" class="label label-warning">
+      {{post.author}}
     </a>
 
     <div> User Tutee Rating: {{owner.tuteeRating}} </div>
@@ -13,49 +13,49 @@
 
     <h4>
       <div class="label label-info">
-        {{p.created.strftime("%b %d, %Y")}}
+        {{post.created.strftime("%b %d, %Y")}}
       </div>
     </h4>
   </div>
 
   <div class="post-content">
-    Subject: {{p.subject}}
+    Subject: {{post.subject}}
   </div>
   <h4>
     <div class="post-content">
       <font color="green">
-        ${{p.wage}} per hour
+        ${{post.wage}} per hour
       </font>
     </div>
   </h4>
 
   <div class="post-content">
-    {% if p.difficulty == 1 %}
+    {% if post.difficulty == 1 %}
       Difficulty: Easy
-    {% elif p.difficulty == 2 %}
+    {% elif post.difficulty == 2 %}
       Difficulty: Medium
-    {% elif p.difficulty == 3 %}
+    {% elif post.difficulty == 3 %}
       Difficulty: Hard
-    {% elif p.difficulty == 4 %}
+    {% elif post.difficulty == 4 %}
       Difficulty: Very Hard
     {% endif %}
   </div>
 
   <div class="post-content">
-    {% if p.meetings == 1 %}
+    {% if post.meetings == 1 %}
       Frequency of Meetings: Once
-    {% elif p.meetings == 2 %}
+    {% elif post.meetings == 2 %}
       Frequency of Meetings: Several
-    {% elif p.meetings == 3 %}
+    {% elif post.meetings == 3 %}
       Frequency of Meetings: More...
     {% endif %}
   </div>
 
-  {% if p.selectedTutor: %}
-    <div> Selected Tutor: <a href="/users/{{p.selectedTutorID}}">{{p.selectedTutor}} </a> </div>
+  {% if post.selectedTutor: %}
+    <div> Selected Tutor: <a href="/users/{{post.selectedTutorID}}">{{post.selectedTutor}} </a> </div>
   {% endif %}
 
-  {% if not p.selectedTutor: %}
+  {% if not post.selectedTutor: %}
     <div> No Tutor has been selected yet! </div>
   {% endif %}
 

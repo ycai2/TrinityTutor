@@ -1,37 +1,37 @@
 <div class="post">
   <div class="post-heading">
     Username: 
-    <a href="/users/{{p.key().id()}}" class="label label-warning">
-      {{p.name}}
+    <a href="/users/{{user.key().id()}}" class="label label-warning">
+      {{user.name}}
     </a>
     <div class="post-content">
-      But most people call me {{p.nickname}}
+      But most people call me {{user.nickname}}
     </div>
 
     <div class="post-content">
-      Major: {{p.major}}
+      Major: {{user.major}}
     </div>
 
     <div class="post-content">
-      Class of {{p.year}}
+      Class of {{user.year}}
     </div>
 
     <div class="post-content">
-      Tutor Rating: {{p.tutorRating}}
+      Tutor Rating: {{user.tutorRating}}
     </div>
     <div class="post-content">
-      Number of Jobs as a Tutor: {{p.numberTutorJobs}}
+      Number of Jobs as a Tutor: {{user.numberTutorJobs}}
     </div>
     <div class="post-content">
-      Tutee Rating: {{p.tuteeRating}}
+      Tutee Rating: {{user.tuteeRating}}
     </div>
     <div class="post-content">
-      Number of Jobs as a Tutee: {{p.numberTuteeJobs}}
+      Number of Jobs as a Tutee: {{user.numberTuteeJobs}}
     </div>
 
     <h4>
       <div class="label label-info">
-        I joined Trinity Tutor: {{p.created.strftime("%b %d, %Y")}}
+        I joined Trinity Tutor: {{user.created.strftime("%b %d, %Y")}}
       </div>
     </h4>
   </div>
