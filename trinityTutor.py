@@ -678,48 +678,43 @@ class NewPost(Handler):
 
     def post(self):
         if self.user:
-                title = self.request.get('title')
-                subject = self.request.get('subjectList')
-                content = self.request.get('content')
-                meetings = self.request.get('meetingsList')
-                difficulty = self.request.get('difficultyList')
-                wage = self.request.get('wage')
+            title = self.request.get('title')
+            subject = self.request.get('subjectList')
+            content = self.request.get('content')
+            meetings = self.request.get('meetingsList')
+            difficulty = self.request.get('difficultyList')
+            wage = self.request.get('wage')
+            wageVerify = True
+            meetingsVerify = True
+            difficultyVerify = True
+            error_meetings = None
+            error_difficulty = None
+            try:
+                float(wage)
                 wageVerify = True
-                meetingsVerify = True
-                difficultyVerify = True
-                error_meetings = None
-                error_difficulty = None
-                try:
-                    float(wage)
-                    wageVerify = True
-                except ValueError:
-                    wageVerify = False
-                if not (meetings.isdigit()):
-                    perror_meetings = "Your meetings value is invalid."
-                    meetingsVerify = False
-                elif ((int(meetings) < 1) or (int(meetings) > 3)):
-                    error_meetings = "Your meetings value is invalid."
-                    meetingsVerify = False
+            except ValueError:
+                wageVerify = False
+            if not (meetings.isdigit()):
+                error_meetings = "Your meetings value is invalid."
+                meetingsVerify = False
+            elif ((int(meetings) < 1) or (int(meetings) > 3)):
+                error_meetings = "Your meetings value is invalid."
+                meetingsVerify = False
 
-                if not (difficulty.isdigit()):
-                    error_difficulty = "Your difficulty value is invalid."
-                    difficultyVerify = False
-                elif ((int(meetings) < 1) or (int(meetings) > 4)):
-                    error_difficulty = "Your difficulty value is invalid."
-                    difficultyVerify = False
+            if not (difficulty.isdigit()):
+                error_difficulty = "Your difficulty value is invalid."
+                difficultyVerify = False
+            elif ((int(meetings) < 1) or (int(meetings) > 4)):
+                error_difficulty = "Your difficulty value is invalid."
+                difficultyVerify = False
 
-                if title and subject and content and wageVerify and meetingsVerify and difficultyVerify:
-                    post.title = title
-                    post.subject = subject
-                    post.content = content
-                    post.wage = float(wage)
-                    post.meetings = int(meetings)
-                    post.difficulty = int(difficulty)
-                    post.put()
-                    self.redirect('/afh/%s' % post_id)
-                else:
-                    error = "Enter information in the required fields! Some of your information may have been reset to default values!"
-                    self.render("newpost.html", title = title, subject=subject, content=content, wage = wage, error_meetings=error_meetings, error_difficulty=error_difficulty)
+            if title and subject and content and wageVerify and meetingsVerify and difficultyVerify:
+                post = Post(parent = _key(), title = title, subject = subject, content = content, wage = float(wage), meetings = int(meetings), difficulty = int(difficulty), author = self.user.name, authorID = str(self.user.key().id()))
+                post.put()
+                self.redirect('/afh/%s' % str(post.key().id()))
+            else:
+                error = "Enter information in the required fields! Some of your information may have been reset to default values!"
+                self.render("newpost.html", title = title, subject=subject, content=content, wage = wage, error_meetings=error_meetings, error_difficulty=error_difficulty)
         else:
             self.redirect('/login')
 
