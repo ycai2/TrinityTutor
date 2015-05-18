@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+    {% block navbar %}
+        <li><a href="/">Home</a></li>
+        <li><a href="/newpost">New Post</a></li>
+        <li class="active"><a href="/users/{{u.key().id()}}">Profile</a></li>
+        <li><a href="/created">Created</a></li>
+        <li><a href="/applied">Applied</a></li>
+        <li><a href="/connections">Connections</a></li>
+        <li><a href="/users">Users</a></li>
+        <li><a href="/FAQ">FAQ</a></li>
+    {% endblock %}
+
+    <div class="container">
+      <form method="post" class="form-signin">
+        <h2>Edit Profile</h2>
+        <div>    
+          {% if error_password %}
+            <div id="form-error" class="form-group has-error has-feedback">
+              <input type="password" name="password" value="" class="form-control" placeholder="Password" required autofocus>
+              <span class="glyphicon glyphicon-remove form-control-feedback" aria-hidden="true"></span>
+              <label class="control-label">{{error_password}}</label>
+            </div>
+          {% else %}
+            <div class="form-group">
+              <input type="password" name="password" value="" class="form-control" placeholder="Password" required autofocus>
+            </div>
+          {% endif %}
+          
+          {% if error_verify %}
+            <div id="form-error" class="form-group has-error has-feedback">              
+              <input type="password" name="verify" value="" class="form-control" placeholder="Confirm Password" required autofocus>
+              <span class="glyphicon glyphicon-remove form-control-feedback" aria-hidden="true"></span>
+              <label class="control-label">{{error_verify}}}</label>
+            </div>
+          {% else %}
+            <div class="form-group">
+              <input type="password" name="verify" value="" class="form-control" placeholder="Confirm Password" required autofocus>
+            </div>
+          {% endif %}
+
+          <div class="form-group">
+            <input type="text" name="name" value="{{u.name}}" class="form-control" placeholder="{{u.name}}" required autofocus>
+          </div>
+
+          <div class="form-group">
+            Class Year
+            <select name="year" required>
+              <option value="{{u.year}}" selected>{{u.year}}</option>
+              <option value="2014">2014</option>
+              <option value="2015">2015</option>
+              <option value="2016">2016</option>
+              <option value="2017">2017</option>
+              <option value="2018">2018</option>
+              <option value="2019">2019</option>
+              <option value="2020">2020</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            Major
+            <select name="major" required>
+              <option value="{{u.major}}" selected >{{u.major}}</option>
+              <option value="Undeclared">Undeclared</option>
+              <option value="American Studies">American Studies</option>
+              <option value="Anthropology">Anthropology</option>
+              <option value="Art History">Art History</option>
+              <option value="Biochemistry">Biochemistry</option>
+              <option value="Biology">Biology</option>
+              <option value="Chemistry">Chemistry</option>
+              <option value="Classical Studies">Classical Studies</option>
+              <option value="Computer Science">Computer Science</option>
+              <option value="Economics">Economics</option>
+              <option value="Educational Studies">Educational Studies</option>
+              <option value="Engineering">Engineering</option>
+              <option value="English">English</option>
+              <option value="Environmental Studies">Environmental Studies</option>
+              <option value="French Studies">French Studies</option>
+              <option value="German Studies">German Studies</option>
+              <option value="Hispanic Studies">Hispanic Studies</option>
+              <option value="History">History</option>
+              <option value="International Studies">International Studies</option>
+              <option value="Italian Studies">Italian Studies</option>
+              <option value="Mathematics">Mathematics</option>
+              <option value="Music">Music</option>
+              <option value="Neuroscience">Neuroscience</option>
+              <option value="Philosophy">Philosophy</option>
+              <option value="Physics">Physics</option>
+              <option value="Political Science">Political Science</option>
+              <option value="Psychology">Psychology</option>
+              <option value="Public Policy and Law">Public Policy and Law</option>
+              <option value="Jewish Studies">Jewish Studies</option>
+              <option value="Religion">Religion</option>
+              <option value="Russian">Russian</option>
+              <option value="Sociology">Sociology</option>
+              <option value="Studio Arts">Studio Arts</option>        
+              <option value="Theater and Dance">Theater and Dance</option>
+              <option value="Urban Studies">Urban Studies</option>
+              <option value="Women, Gender, and Sexuality">Women, Gender, and Sexuality</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <input type="text" name="description" value="{{u.description}}" class="form-control" placeholder="{{u.description}}" autofocus>
+          </div>
+
+        </div>
+        <br>
+        <button class="btn btn-lg btn-primary btn-block" type="submit">Submit</button>
+      </form>
+
+      <div>
+        {{feedbacks | safe}}
+      </div>
+    </div>

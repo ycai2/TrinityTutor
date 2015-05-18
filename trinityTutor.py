@@ -444,7 +444,7 @@ class ConnectionRedirect(Handler):
         else:
             self.redirect('/login')
 
-class ShowMyAccount(Handler):
+class MyProfile(Handler):
     def get(self):
         if self.user:
             self.redirect('users/%s' % str(self.user.key().id()))
@@ -687,14 +687,13 @@ class Signup(Handler):
             params['error_email'] = "That's not a valid email."
             have_error = True
 
-
-
         if have_error:
             self.render('signup-form.html', **params)
 
         else:
             self.done(**params)
 
+            #remove this done function
     def done(self, *a, **kw):
         raise NotImplementedError
 
@@ -758,7 +757,68 @@ class Profile(Handler):
                 each = Feedback.get_by_id(int(thing))
                 if each:
                     feedbackText += each.render()
-            self.render("profile.html", u = user, feedbacks = feedbackText, currentUsername = self.user.name)
+            if self.user.name == user.name:
+                ownerFlag = True
+                self.render("profile.html", u = user, feedbacks = feedbackText, currentUsername = self.user.name, ownerFlag = ownerFlag)
+            else:
+                ownerFlag = False
+                self.render("profile.html", u = user, feedbacks = feedbackText, currentUsername = self.user.name, ownerFlag = ownerFlag)
+
+class EditProfile(Handler):
+    def get(self):
+        print self.user.name
+        user = User.by_name(self.user.name)
+        if not self.user:
+            self.redirect("/login")
+        else:
+            self.render("editableProfile.html", u = user)
+
+    def post(self):
+        user = User.by_name(self.user.name)
+        if not self.user:
+            self.redirect("/login")
+        else:
+            have_error = False
+            self.username = user.name
+            self.password = self.request.get('password')
+            self.verify = self.request.get('verify')
+            self.name = self.request.get('name')
+            self.year = self.request.get('year')
+            self.major = self.request.get('major')
+            self.id = user.key().id()
+            self.description = self.request.get('description')
+
+            params = dict(username = self.username,
+                          name = self.name,
+                          year = self.year,
+                          major = self.major,
+                          description = self.description,
+                          u = user)
+
+            if not valid_password(self.password):
+                params['error_password'] = "Password has to be at least 3 character/numbers"
+                have_error = True
+                
+            elif self.password != self.verify:
+                params['error_verify'] = "Your passwords didn't match."
+                have_error = True
+
+            if have_error:
+                self.render('editableProfile.html', **params)
+
+            else:
+                self.done(**params)
+
+    def done(self, **params):
+        user = User.by_id(int(self.id))
+        user.password = self.password
+        user.name = self.name
+        user.year = int(self.year)
+        user.major = self.major
+        user.description = self.description
+
+        user.put()
+        self.redirect('/users/%s' % user.key().id())
 
 class Login(Handler):
     def get(self):
@@ -767,17 +827,22 @@ class Login(Handler):
     def post(self):
         username = self.request.get('username').lower()
         verifyCheckUser = User.by_name(username)
-        password = self.request.get('password')
-        u = User.login(username, password)
-        if u and verifyCheckUser.confirmed:
-            self.login(u)
-            self.redirect('/')
-        else:
-            if u and not verifyCheckUser.confirmed:
-                msg = 'This account has not been verified with Trinity Tutor. Please check your email for a verification link.'
+        if verifyCheckUser:
+            password = self.request.get('password')
+            u = User.login(username, password)
+            if u and verifyCheckUser.confirmed:
+                self.login(u)
+                self.redirect('/')
             else:
-                msg = 'Either Username OR password invalid!'
-            self.render('login-form.html', error = msg)
+                if u and not verifyCheckUser.confirmed:
+                    message = 'This account has not been verified with Trinity Tutor. Please check your email for a verification link.'
+                else:
+                    message = 'Either Username OR password invalid!'
+                self.render('login-form.html', error = message)
+        else:
+            message = 'Username "%s" not registered with Trinity Tutor.' % self.request.get('username')
+            self.render('login-form.html', error = message)
+
 
 class Logout(Handler):
     def get(self):
@@ -787,13 +852,21 @@ class Logout(Handler):
 class ConfirmPage(Handler):
     def get(self, email_hash):
         user = User.all().filter('email_hash =', email_hash).get()
-        self.render("confirmationPage.html", userName = user.name, userConfirmed = user.confirmed)
+        if user:
+            self.render("confirmationPage.html", userName = user.name, userConfirmed = user.confirmed)
+        else:
+            #say user does not exist
+            self.redirect('/')
 
     def post(self, email_hash):
         user = User.all().filter('email_hash =', email_hash).get()
-        user.confirmed = True
-        user.put()
-        self.redirect('/login')
+        if user:
+            user.confirmed = True
+            user.put()
+            self.redirect('/login')
+        else:
+            #say user does not exist
+            self.redirect('/')
 
 class FAQ(Handler):
     def get(self):
@@ -808,7 +881,8 @@ app = webapp2.WSGIApplication([('/', Front),
                                ('/signup', Register),
                                ('/login', Login),
                                ('/logout', Logout),
-                               ('/myaccount', ShowMyAccount),
+                               ('/myaccount', MyProfile),
+                               ('/editmyaccount', EditProfile),
                                ('/created', Created),
                                ('/applied', Applied),
                                ('/users', ShowAllUsers),
