@@ -397,8 +397,6 @@ class Front(Handler):
     def post(self):
         subject = self.request.get('subjectTag')
         sorting = self.request.get('sortingTag')
-        print subject
-        print sorting
         if (sorting != 'None') and (subject != 'None'):
             posts = greetings = Post.all().filter('subject =', subject).filter("created >", self.weekAgo()).order('-%s' % sorting)
 
@@ -410,7 +408,6 @@ class Front(Handler):
 
         elif sorting == 'None':
             posts = greetings = Post.all().filter('subject =', subject).filter("created >", self.weekAgo()).order('-created')
-
 
         self.render('front.html', posts = posts, subjectTag = subject, sortingTag = sorting)    
 
@@ -443,17 +440,15 @@ class ConnectionsPage(Handler):
                 user = User.by_id(int(user_id))
                 connectionList = user.connectionList
                 connectionText = ""
-                print connectionList
                 for connectionID in connectionList:
                     connection = Connection.by_id(int(connectionID))
                     if connection:
                         connectionText += connection.render()
-                self.render("connections.html", p = self, connectionText = connectionText)
+                self.render("connections.html", user = user, connectionText = connectionText)
             else:
                 self.redirect('/connections')
         else:
             self.redirect('/login')
-
 
 class FeedbackPage(Handler):
     def get(self, post_id):
@@ -462,27 +457,40 @@ class FeedbackPage(Handler):
             if post.selectedTutor:
                 if self.user.key().id() == int(post.selectedTutorID):
                     if post.feedbackOnTutee:
+                        #You already gave feedback
                         self.redirect('/afh/%s' % str(post_id))
                     else:
                         self.render("submitFeedback.html", post = post)
                 elif self.user.key().id() == int(post.authorID):
                     if post.feedbackOnTutor:
+                        #You already gave feedback
                         self.redirect('/afh/%s' % str(post_id))
                     else:
                         self.render("submitFeedback.html", post = post)
+                else:
+                    #you do not have permission to leave feedback
+                    self.redirect('/afh/%s' % str(post_id))
             else:
+                #no feedback can be given until a tutor has been selected
                 self.redirect('/afh/%s' % str(post_id))
-                print "you do not have permission to view this page"
         else:
             self.redirect('login')
 
     def post(self, post_id):
         if self.user:
             post = Post.by_id(int(post_id))
-            rating = int(self.request.get('rating'))
-            comment = self.request.get('comment')
+            rating = self.request.get('rating')
+            ratingVerify = True
+            error_rating = ""
+            if not (rating.isdigit()):
+                error_rating = "Your rating value is invalid"
+                ratingVerify = False
+            elif ((int(rating) < 1) or (int(rating) > 5)):
+                error_rating = "Your rating value is invalid"
+                ratingVerify = False
 
-            if rating:
+            comment = self.request.get('comment')
+            if rating and ratingVerify:
                 if self.user.name == post.author:
                     f = Feedback(parent = feedbacks_key(), receiverID = post.selectedTutorID, writerID = str(self.user.key().id()), AFHID = str(post_id), rating = rating, comment = comment)
                     f.put()
@@ -492,8 +500,7 @@ class FeedbackPage(Handler):
                     user.calculateTutorRating(rating)
                     post.feedbackOnTutor = True
                     post.put()
-
-                else:
+                elif self.user.name == post.selectedTutor:
                     f = Feedback(parent = feedbacks_key(), receiverID = post.authorID, writerID = post.selectedTutorID, AFHID = str(post_id), rating = rating, comment = comment)
                     f.put()
                     user = User.by_id(int(post.authorID))
@@ -502,10 +509,11 @@ class FeedbackPage(Handler):
                     user.calculateTuteeRating(rating)
                     post.feedbackOnTutee = True
                     post.put()
+                else:
+                    print "you don't have permission to give feedback on this post"
                 self.redirect('/afh/%s' % str(post_id))
             else:
-                print "You must submit a rating"
-                self.redirect('/feedback/%s' % str(post_id))
+                self.render("submitFeedback.html", post = post, error_rating = error_rating)
         else:
             self.redirect('login')
 
