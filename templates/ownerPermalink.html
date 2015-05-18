@@ -13,5 +13,5 @@
 {% endblock %}
 
 {% block content %}
-  {{post.render_ownerPage() | safe}}
+  {{post.render_ownerPage(error_comment) | safe}}
 {% endblock %}

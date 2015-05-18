@@ -231,7 +231,7 @@ class Post(db.Model):
         owner = User.by_id(int(self.authorID))
         return render_str("post.html", post = self, owner = owner)
 
-    def render_page(self):
+    def render_page(self, error_comment):
         self._render_text = self.content.replace('\n', '<br>')
         #print self.created.now()-datetime.timedelta(hours=5)
         respondentIDList = self.respondentIDList
@@ -250,9 +250,9 @@ class Post(db.Model):
 
         owner = User.by_id(int(self.authorID))
 
-        return render_str("single-post.html", post = self, commentText = commentText, respondentText = respondentText, owner = owner)
+        return render_str("single-post.html", post = self, commentText = commentText, respondentText = respondentText, owner = owner, error_comment = error_comment)
 
-    def render_ownerPage(self):
+    def render_ownerPage(self, error_comment = ""):
         self._render_text = self.content.replace('\n', '<br>')
         #print self.created.now()-datetime.timedelta(hours=5)
         respondentIDList = self.respondentIDList
@@ -271,7 +271,7 @@ class Post(db.Model):
        
         owner = User.by_id(int(self.authorID))
 
-        return render_str("owner-single-post.html", p = self, commentText = commentText, respondentNameList = self.respondentNameList, respondentText = respondentText, owner = owner)
+        return render_str("owner-single-post.html", p = self, commentText = commentText, respondentNameList = self.respondentNameList, respondentText = respondentText, owner = owner, error_comment = error_comment)
 
     def sendConnectionEmail(self, receiver, sender, postID):
         receiverName = receiver.nickname
@@ -522,15 +522,18 @@ class PostPage(Handler):
         post = Post.by_id(int(post_id))
         if not post:
             self.error(404)
+            #error
+            print "ERROR"
+            self.redirect('/')
         else:   
             if self.user:
                 if post.selectedTutor:
-                    if ((self.user.key().id() == int(post.selectedTutorID)) or (self.user.key().id() == int(post.authorID))):
+                    if ((self.user.name == post.selectedTutor) or (self.user.name == post.author)):
                         owner = User.by_id(int(post.authorID))
                         self.render("feedbackOption.html", p = post, owner = owner)
                     else:
                         self.render("permalink.html", post = post)
-                elif self.user.name == Post.by_id(int(post_id)).author:
+                elif self.user.name == post.author:
                     self.render("ownerPermalink.html", post = post)
                 else:
                     self.render("permalink.html", post = post)
@@ -548,23 +551,21 @@ class PostPage(Handler):
             if isSelect:
                 selected = self.request.get('selectList')
                 if selected:
-                    thisAFH = Post.by_id(int(post_id))
-                    thisAFH.selectedTutor = selected
-                    thisAFH.selectedTutorID = str(User.by_name(selected).key().id())
-                    thisAFH.put()
-                    thisAFH.exchangeContact(self.user)
+                    post.selectedTutor = selected
+                    post.selectedTutorID = str(self.user.key().id())
+                    post.put()
+                    post.exchangeContact(self.user)
                     self.redirect('/connections')
                 else:
                     self.redirect('/afh/%s' % str(post_id))
-
             elif isApply:
                 respondent = self.user.name
                 alreadyAppliedFlag = False
-
                 for name in post.respondentNameList:
                     if name == respondent:
                         alreadyAppliedFlag = True
-                if alreadyAppliedFlag:
+                if ((alreadyAppliedFlag) or (self.user.name == post.author)):
+                    #you already applied to this post/you created this post
                     self.redirect('/afh/%s' % post_id)
                 else:
                     post.respondentNameList.append(respondent)
@@ -577,7 +578,7 @@ class PostPage(Handler):
                 content = self.request.get('content').replace('\n', '<br>')
                 if not post:
                     self.error(404)
-                    return
+                    self.redirect('/afh/%s' % str(post_id))
                 else:
                     if content:
                         created = datetime.now() - timedelta(hours=5)
@@ -585,7 +586,14 @@ class PostPage(Handler):
                         comment.put()
                         post.commentIDList.append(str(comment.key().id()))
                         post.put()
-                    self.redirect('/afh/%s' % str(post_id))
+                        self.redirect('/afh/%s' % str(post_id))
+                    else:
+                        #no content entered
+                        error_comment = "No content was entered!"
+                        if (self.user.name == post.author):
+                            self.render("ownerPermalink.html", post = post, error_comment = error_comment)
+                        else:
+                            self.render("permalink.html", post = post, error_comment = error_comment)
 
 class EditPost(Handler):
     def get(self, post_id):
