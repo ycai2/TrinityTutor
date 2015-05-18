@@ -11,8 +11,11 @@
       <div> Number of Jobs as a Tutee: {{owner.numberTuteeJobs}} </div>
       <div class="label label-info">{{p.created.strftime("%b %d, %Y")}}</div>
       <br><br><br>
-
+      <hr>
       <a href="/editafh/{{p.key().id()}}">Edit This Post</a>
+      <br><br>
+      <hr>
+      <a href="/deleteafh/{{p.key().id()}}"><font color="red">DELETE THIS POST</font></a>
 
     </h5>
   </div>
