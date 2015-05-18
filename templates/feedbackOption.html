@@ -13,31 +13,31 @@
 {% endblock %}
 
 {% block content %}
-  <a href="/feedback/{{p.key().id()}}">SUBMIT FEEDBACK</a>
+  <a href="/feedback/{{post.key().id()}}">SUBMIT FEEDBACK</a>
 
   <div class="post">
     <div class="post-heading">
       <h2>
-        {{p.title}}
+        {{post.title}}
       </h2>
       <h5>
         Posted by
-        <a href="/users/{{p.authorID}}" class="label label-warning">
-          {{p.author}}
+        <a href="/users/{{post.authorID}}" class="label label-warning">
+          {{post.author}}
         </a>
 
         <div> User Tutee Rating: {{owner.tuteeRating}} </div>
         <div> Number of Jobs as a Tutee: {{owner.numberTuteeJobs}} </div>
 
         <div class="label label-info">
-          {{p.created.strftime("%b %d, %Y")}}
+          {{post.created.strftime("%b %d, %Y")}}
         </div>
       </h5>
     </div>
     <hr>
     <h4>
       <div class="post-content">
-        {{p._render_text | safe}}
+        {{post._render_text | safe}}
       </div>
     </h4>
     <hr>
@@ -45,51 +45,45 @@
     <hr>
       <h5>
       <div>
-       <p> Subject: {{p.subject}}</p>
+       <p> Subject: {{post.subject}}</p>
       </div>
-       <p><font color="green"> Wage (USD per hour): $ {{p.wage}} </font></p>
+       <p><font color="green"> Wage (USD per hour): $ {{post.wage}} </font></p>
       </h5>
 
     <div>
-      {% if p.meetings == 1 %}
+      {% if post.meetings == 1 %}
         <p>Frequency of Meetings: Once</p>
-      {% elif p.meetings == 2 %}
+      {% elif post.meetings == 2 %}
         <p>Frequency of Meetings: Several</p>
-      {% elif p.meetings == 3 %}
+      {% elif post.meetings == 3 %}
         <p>Frequency of Meetings: More...</p>
       {% endif %}
     </div>
 
     <div>
-      {% if p.difficulty == 1 %}
+      {% if post.difficulty == 1 %}
         <p> Difficulty: Easy </p>
-      {% elif p.difficulty == 2 %}
+      {% elif post.difficulty == 2 %}
         <p> Difficulty: Medium </p>
-      {% elif p.difficulty == 3 %}
+      {% elif post.difficulty == 3 %}
         <p> Difficulty: Hard </p>
-      {% elif p.difficulty == 4 %}
+      {% elif post.difficulty == 4 %}
         <p> Difficulty: Very Hard </p>
       {% endif %}
     </div>
     <hr>
   </div>
 
-  <div> Selected Tutor: <a href="/users/{{p.selectedTutorID}}">{{p.selectedTutor}} </a> </div>
+  <div> Selected Tutor: <a href="/users/{{post.selectedTutorID}}">{{post.selectedTutor}} </a> </div>
 
 
   <hr><hr>
 
 
   <div> LIST OF COMMENTS </div>
-  {% for i in comments %}
-
-  <div class="panel panel-default">
-    <div class="panel-heading"> {{i.author}} {{i.created.strftime("%H:%M:%S, %b %d, %Y")}}</div>
-    <div class="panel-body">
-      {{i.content | safe}}
-    </div>
-  </div>
-  {% endfor %}
+  <br>
+    {{commentText | safe}}
+  <br>
 
   </div>
 {% endblock %}
