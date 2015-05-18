@@ -527,7 +527,6 @@ class FeedbackPage(Handler):
 class PostPage(Handler):
     def get(self, post_id):
         post = Post.by_id(int(post_id))
-
         if not post:
             self.error(404)
         else:   
@@ -595,6 +594,80 @@ class PostPage(Handler):
                         post.put()
                     self.redirect('/afh/%s' % str(post_id))
 
+class EditPost(Handler):
+    def get(self, post_id):
+        post = Post.by_id(int(post_id))
+        if not post:
+            self.error(404)
+        else:   
+            if self.user:
+                if post.selectedTutor:
+                    if (self.user.key().id() == int(post.authorID)):
+                        owner = User.by_id(int(post.authorID))
+                        self.render("feedbackOption.html", p = post, owner = owner)
+                    else:
+                        self.render("permalink.html", post = post)
+                elif self.user.name == Post.by_id(int(post_id)).author:
+                    self.render("editPost.html", post = post)
+                else:
+                    self.render("permalink.html", post = post)
+            else:
+                self.redirect("/login")
+
+    def post(self, post_id):
+        post = Post.by_id(int(post_id))
+        if not post:
+            self.error(404)
+        else:
+            if self.user:
+                title = self.request.get('title')
+                subject = self.request.get('subjectList')
+                content = self.request.get('content')
+                meetings = self.request.get('meetingsList')
+                difficulty = self.request.get('difficultyList')
+                wage = self.request.get('wage')
+                wageVerify = True
+                meetingsVerify = True
+                difficultyVerify = True
+                error_meetings = None
+                error_difficulty = None
+
+                try:
+                    float(wage)
+                    wageVerify = True
+                except ValueError:
+                    wageVerify = False
+                if not (meetings.isdigit()):
+                    error_meetings = "Your meetings value is invalid."
+                    meetingsVerify = False
+                elif ((int(meetings) < 1) or (int(meetings) > 3)):
+                    print meetings
+                    error_meetings = "Your meetings value is invalid."
+                    meetingsVerify = False
+
+                if not (difficulty.isdigit()):
+                    error_difficulty = "Your difficulty value is invalid."
+                    difficultyVerify = False
+                elif ((int(meetings) > 1) and (int(meetings) < 4)):
+                    print "ASDASD"
+                    print difficulty
+                    error_difficulty = "Your difficulty value is invalid."
+                    difficultyVerify = False
+
+                if title and subject and content and wageVerify and meetingsVerify and difficultyVerify:
+                    post.title = title
+                    post.subject = subject
+                    post.content = content
+                    post.wage = float(wage)
+                    post.meetings = int(meetings)
+                    post.difficulty = int(difficulty)
+                    post.put()
+                    self.redirect('/afh/%s' % post_id)
+                else:
+                    error = "Enter information in the required fields! Some of your information may have been reset to default values!"
+                    self.render("newpost.html", title = title, subject=subject, content=content, wage = wage, error_meetings=error_meetings, error_difficulty=error_difficulty)
+            else:
+                self.redirect('/login')
 
 class NewPost(Handler):
     def get(self):
@@ -604,31 +677,51 @@ class NewPost(Handler):
             self.redirect("/login")
 
     def post(self):
-        if not self.user:
-            self.redirect('/login')
+        if self.user:
+                title = self.request.get('title')
+                subject = self.request.get('subjectList')
+                content = self.request.get('content')
+                meetings = self.request.get('meetingsList')
+                difficulty = self.request.get('difficultyList')
+                wage = self.request.get('wage')
+                wageVerify = True
+                meetingsVerify = True
+                difficultyVerify = True
+                error_meetings = None
+                error_difficulty = None
+                try:
+                    float(wage)
+                    wageVerify = True
+                except ValueError:
+                    wageVerify = False
+                if not (meetings.isdigit()):
+                    perror_meetings = "Your meetings value is invalid."
+                    meetingsVerify = False
+                elif ((int(meetings) < 1) or (int(meetings) > 3)):
+                    error_meetings = "Your meetings value is invalid."
+                    meetingsVerify = False
+
+                if not (difficulty.isdigit()):
+                    error_difficulty = "Your difficulty value is invalid."
+                    difficultyVerify = False
+                elif ((int(meetings) < 1) or (int(meetings) > 4)):
+                    error_difficulty = "Your difficulty value is invalid."
+                    difficultyVerify = False
+
+                if title and subject and content and wageVerify and meetingsVerify and difficultyVerify:
+                    post.title = title
+                    post.subject = subject
+                    post.content = content
+                    post.wage = float(wage)
+                    post.meetings = int(meetings)
+                    post.difficulty = int(difficulty)
+                    post.put()
+                    self.redirect('/afh/%s' % post_id)
+                else:
+                    error = "Enter information in the required fields! Some of your information may have been reset to default values!"
+                    self.render("newpost.html", title = title, subject=subject, content=content, wage = wage, error_meetings=error_meetings, error_difficulty=error_difficulty)
         else:
-            title = self.request.get('title')
-            selectedSubject = self.request.get('subjectList')
-            content = self.request.get('content')
-            wage = None
-            if self.request.get('wage'):
-                wage = float(self.request.get('wage'))
-            selectedMeetings = int(self.request.get('meetingsList'))
-            selectedDifficulty = int(self.request.get('difficultyList'))
-
-            if title and selectedSubject and content and wage and selectedMeetings and selectedDifficulty:
-                p = Post(parent = _key(), title = title, subject = selectedSubject, content = content, wage = wage, meetings = selectedMeetings, difficulty = selectedDifficulty, author = self.user.name, authorID = str(self.user.key().id()))
-                p.put()
-
-                self.user.createdList.append(str(p.key().id()))
-                self.user.put()
-
-                self.redirect('/afh/%s' % str(p.key().id()))
-            
-            else:
-                error = "Enter information in the required fields! Some of your information may have been reset to default values!"
-                self.render("newpost.html", title = title, subject=selectedSubject, content=content, wage = wage, meetings = selectedMeetings, difficulty = selectedDifficulty, error=error)
-
+            self.redirect('/login')
 
 USER_RE = re.compile(r"^[a-zA-Z0-9_-]{3,20}$")
 def valid_username(username):
@@ -889,6 +982,7 @@ class FAQ(Handler):
 
 app = webapp2.WSGIApplication([('/', Front),
                                ('/afh/([0-9]+)(?:.json)?', PostPage),
+                               ('/editafh/([0-9]+)(?:.json)?', EditPost),
                                ('/feedback/([0-9]+)(?:.json)?', FeedbackPage),
                                ('/confirmation/([a-zA-Z0-9]+)', ConfirmPage),
                                ('/newpost', NewPost),

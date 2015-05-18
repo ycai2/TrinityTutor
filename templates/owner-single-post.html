@@ -5,19 +5,18 @@
     </h2>
     <h5>
       Posted by
-      <a href="/users/{{p.authorID}}" class="label label-warning">
-        {{p.author}}
-      </a>
+      <a href="/users/{{p.authorID}}" class="label label-warning">{{p.author}}</a>
 
       <div> User Tutee Rating: {{owner.tuteeRating}} </div>
       <div> Number of Jobs as a Tutee: {{owner.numberTuteeJobs}} </div>
+      <div class="label label-info">{{p.created.strftime("%b %d, %Y")}}</div>
+      <br><br><br>
 
-      <div class="label label-info">
-        {{p.created.strftime("%b %d, %Y")}}
-      </div>
+      <a href="/editafh/{{p.key().id()}}">Edit This Post</a>
+
     </h5>
   </div>
-  <hr>
+  <hr><hr>
   <h4>
     <div class="post-content">
       {{p._render_text | safe}}
