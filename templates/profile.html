@@ -2,7 +2,7 @@
     {% block navbar %}
         <li><a href="/">Home</a></li>
         <li><a href="/newpost">New Post</a></li>
-        <li class="active"><a href="/users/{{user.key().id()}}">Profile</a></li>
+        <li class="active"><a href="/users/{{u.key().id()}}">Profile</a></li>
         <li><a href="/created">Created</a></li>
         <li><a href="/applied">Applied</a></li>
         <li><a href="/connections">Connections</a></li>
@@ -23,48 +23,48 @@
               <table class="table table-striped">
                   <thead>
                     <tr>
-                      <th>{{user.name}}'s Profile</th>
+                      <th>{{u.name}}'s Profile</th>
                       <th></th>
                     </tr>
                   </thead>
                   <tbody>
                     <tr>
                       <td>Name</td>
-                      <td>{{user.nickname}}</td>
+                      <td>{{u.nickname}}</td>
                     </tr>
                     <tr>
                       <td>Graduation Year</td>
-                      <td>{{user.year}}</td>
+                      <td>{{u.year}}</td>
                     </tr>
                     <tr>
                       <td>Major</td>
-                      <td>{{user.major}}</td>
+                      <td>{{u.major}}</td>
                     </tr>
-                    {% if user.name == currentUsername: %}
+                    {% if u.name == currentUsername: %}
                     <tr>
                       <td>Email</td>
-                      <td>{{user.email}}</td>
+                      <td>{{u.email}}</td>
                     </tr>
                     {% endif %}
                     <tr>
                       <td>Tutor Rating</td>
-                      <td>{{user.tutorRating}}</td>
+                      <td>{{u.tutorRating}}</td>
                     </tr>
                     <tr>
                       <td>Number of Jobs as a Tutor</td>
-                      <td>{{user.numberTutorJobs}}</td>
+                      <td>{{u.numberTutorJobs}}</td>
                     </tr>
                     <tr>
                       <td>Tutee Rating</td>
-                      <td>{{user.tuteeRating}}</td>
+                      <td>{{u.tuteeRating}}</td>
                     </tr>
                     <tr>
                       <td>Number of Jobs as a Tutee</td>
-                      <td>{{user.numberTuteeJobs}}</td>
+                      <td>{{u.numberTuteeJobs}}</td>
                     </tr>
                     <tr>
                       <td>Description</td>
-                      <td>{{user.description}}</td>
+                      <td>{{u.description}}</td>
                     </tr>
                   </tbody>
               </table>

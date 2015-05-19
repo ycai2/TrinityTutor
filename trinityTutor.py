@@ -961,9 +961,20 @@ class Profile(Handler):
             self.redirect("/login")
         else:
             ownerFlag = False
+            # print "asdasdasdsad"
+            # print "viewing other profile"
+            # print user.key().id()
+            # print user.name
+            # print user.key().id()
+            # print user.nickname
+            # print user.email
             if self.user.name == user.name:
                 ownerFlag = True
-            self.render("profile.html", user = user, feedbacks = self.user.createFeedback(), currentUsername = self.user.name, ownerFlag = ownerFlag)
+            # print user
+            # print user.key().id()
+            # print user.name
+            print self
+            self.render("profile.html", u = user, username = user.name, feedbacks = user.createFeedback(), ownerFlag = ownerFlag)
 
 class EditProfile(Handler):
     def get(self):
