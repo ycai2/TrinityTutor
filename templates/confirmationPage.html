@@ -18,8 +18,9 @@
 <div> Hello {{userName}} </div>
 {% if not userConfirmed: %}
 <form method="post" class="jumbotron">
-  <div>If you are not trying to register "{{userName}}," you must sign up again with your desired username.</div>
-  <input type="submit" name="confirm" class="btn btn-primary" value="Verify your account"></input>
+  <div>The email address associated with this registration is {{userEmail}}.</div>
+  <div>If you are not trying to register "{{userName}}" or this is the incorrect email address, you must sign up again with the correct information.</div>
+  <input type="submit" name="confirm" class="btn btn-primary" value="Verify your account: {{userName}}"></input>
   <br><br>
 </form>
 {% endif %}

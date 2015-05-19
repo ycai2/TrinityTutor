@@ -117,6 +117,7 @@ class User(db.Model):
     numberTutorJobs = db.IntegerProperty(required = True)
     tuteeRating = db.FloatProperty()
     numberTuteeJobs = db.IntegerProperty(required = True)
+    created = db.DateTimeProperty(auto_now_add = True)
 
     feedbackList = db.ListProperty(str, indexed = True, default=[])
     connectionList = db.ListProperty(str, indexed = True, default=[])
@@ -904,8 +905,20 @@ class Register(Handler):
                 if each.confirmed:
                     registeredFlag = True
             if registeredFlag:
-                message = 'That user already exists.'
-                self.render('signup-form.html', error_username = message, **params)
+                userMessage = 'That user already exists.'
+                self.render('signup-form.html', error_username = userMessage, **params)
+            elif emailCheck:
+                for each in emailCheck:
+                    if each.confirmed:
+                        registeredFlag = True
+                if registeredFlag:
+                    emailMessage = "That email is already registered with Trinity Tutor."
+                    self.render('signup-form.html', error_email = emailMessage, **params)
+                else:
+                    user = User.register(self.username.lower(), self.password, self.email.lower(), self.name, self.year, self.major, self.description)
+                    user.put()
+                    user.sendVerificationEmail()
+                    self.redirect('/')
             else:
                 user = User.register(self.username.lower(), self.password, self.email.lower(), self.name, self.year, self.major, self.description)
                 user.put()
@@ -916,8 +929,20 @@ class Register(Handler):
                 if each.confirmed:
                     registeredFlag = True
             if registeredFlag:
-                message = "That email is already registered with Trinity Tutor."
-                self.render('signup-form.html', error_email = message, **params)
+                emailMessage = "That email is already registered with Trinity Tutor."
+                self.render('signup-form.html', error_email = emailMessage, **params)
+            elif userCheck:
+                for each in userCheck:
+                    if each.confirmed:
+                        registeredFlag = True
+                if registeredFlag:
+                    userMessage = 'That user already exists.'
+                    self.render('signup-form.html', error_username = userMessage, **params)
+                else:
+                    user = User.register(self.username.lower(), self.password, self.email.lower(), self.name, self.year, self.major, self.description)
+                    user.put()
+                    user.sendVerificationEmail()
+                    self.redirect('/')
             else:
                 user = User.register(self.username.lower(), self.password, self.email.lower(), self.name, self.year, self.major, self.description)
                 user.put()
@@ -1060,11 +1085,11 @@ class ConfirmPage(Handler):
                             print "email has already been registered with TT"
                             self.redirect('/')
                         else:
-                            self.render("confirmationPage.html", userName = user.name, userConfirmed = user.confirmed)
+                            self.render("confirmationPage.html", userName = user.name, userConfirmed = user.confirmed, userEmail = user.email)
                 else:
-                    self.render("confirmationPage.html", userName = user.name, userConfirmed = user.confirmed)
+                    self.render("confirmationPage.html", userName = user.name, userConfirmed = user.confirmed, userEmail = user.email)
             else:
-                self.render("confirmationPage.html", userName = user.name, userConfirmed = user.confirmed)
+                self.render("confirmationPage.html", userName = user.name, userConfirmed = user.confirmed, userEmail = user.email)
         else:
             print "no such user exists"
             self.redirect('/')
@@ -1122,13 +1147,20 @@ class CronTask(Handler):
     def weekAgo(self):
         return datetime.now() - timedelta(seconds = (7 * 24 * 60 * 60))
 
+    def dayAgo(self):
+        return datetime.now() - timedelta(seconds = (24 * 60 * 60))
+
     def get(self):
         posts = Post.all().order('-created')
-        deadline = self.weekAgo()
         for post in posts:
             if not post.selectedTutor:
-                if post.created < deadline:
+                if post.created < self.weekAgo():
                     post.delete()
+        users = User.all().order('-created')
+        for user in users:
+            if not user.confirmed:
+                if user.created < self.dayAgo():
+                    user.delete()
 
 
 app = webapp2.WSGIApplication([('/', Front),
