@@ -80,7 +80,6 @@ class Handler(webapp2.RequestHandler):
         if self.read_message_cookie():
             message = self.read_message_cookie()
             message = message.replace('-', ' ')
-            # self.render('popup.html', message = message)
             self.write(self.render_str('popup.html', message=message))
             self.delete_message_cookie()
 
@@ -462,8 +461,6 @@ class Front(Handler):
         return datetime.now() - timedelta(seconds = (7 * 24 * 60 * 60))
 
     def get(self):
-        # posts = Post.all().filter("created >", self.weekAgo()).order('-created')
-        # self.popupCheck()
         posts = Post.all().order('-created')
         self.render('front.html', posts = posts)
 
@@ -605,16 +602,12 @@ class PostPage(Handler):
                 if post.selectedTutor:
                     if ((self.user.name == post.selectedTutor) or (self.user.name == post.author)):
                         owner = User.by_id(int(post.authorID))
-                        # self.popupCheck()
                         self.render("feedbackOption.html", post = post, owner = owner, commentText = post.createComments())
                     else:
-                        # self.popupCheck()
                         self.render("permalink.html", post = post)
                 elif self.user.name == post.author:
-                    self.popupCheck()
                     self.render("ownerPermalink.html", post = post)
                 else:
-                    # self.popupCheck()
                     self.render("permalink.html", post = post)
             else:
                 self.redirect("/login")
@@ -642,7 +635,7 @@ class PostPage(Handler):
                                 self.set_message_cookie(message)
                                 self.redirect('/post/%s' % str(post_id))
                         else:
-                            message = "No-User-was-been-selected!"
+                            message = "No-User-has-been-selected!"
                             self.set_message_cookie(message)
                             self.redirect('/post/%s' % str(post_id))
                     else:
@@ -703,14 +696,12 @@ class EditPost(Handler):
                     else:
                         message = "You-cannot-edit-a-Post-once-a-Tutor-has-been-selected!"
                         self.set_message_cookie(message)
-                        # self.popupCheck()
                         self.render("permalink.html", post = post)
                 elif self.user.name == post.author:
                     self.render("editPost.html", post = post)
                 else:
                     message = "You-do-not-have-permission-to-leave-feedback-on-this-Post!"
                     self.set_message_cookie(message)
-                    # self.popupCheck()
                     self.render("permalink.html", post = post)
             else:
                 self.redirect("/login")
@@ -732,8 +723,8 @@ class EditPost(Handler):
                         wageVerify = True
                         meetingsVerify = True
                         difficultyVerify = True
-                        error_meetings = None
-                        error_difficulty = None
+                        error_meetings = ""
+                        error_difficulty = ""
 
                         try:
                             float(wage)
@@ -751,9 +742,16 @@ class EditPost(Handler):
                         if not (difficulty.isdigit()):
                             error_difficulty = "Your difficulty value is invalid."
                             difficultyVerify = False
-                        elif ((int(meetings) > 1) and (int(meetings) < 4)):
+                        elif ((int(difficulty) < 1) or (int(difficulty) > 4)):
                             error_difficulty = "Your difficulty value is invalid."
                             difficultyVerify = False
+
+                        print title
+                        print subject
+                        print content
+                        print wageVerify
+                        print meetingsVerify
+                        print difficultyVerify
 
                         if title and subject and content and wageVerify and meetingsVerify and difficultyVerify:
                             post.title = title
@@ -765,8 +763,12 @@ class EditPost(Handler):
                             post.put()
                             self.redirect('/post/%s' % post_id)
                         else:
+                            # Popup doesn't always happen here
                             error = "Enter information in the required fields! Some of your information may have been reset to default values!"
-                            self.render("editPost.html", title = title, subject = subject, content = content, wage = wage, error_meetings = error_meetings, error_difficulty = error_difficulty, error = error)
+                            message = "Enter-information-in-the-required-fields!-Some-of-your-information-may-have-been-reset-to-default-values!"
+                            self.set_message_cookie(message)
+                            time.sleep(0.5)
+                            self.render("editPost.html", title = title, subject = subject, content = content, wage = wage, error_meetings = error_meetings, error_difficulty = error_difficulty, error = error, post = post)
                     else:
                         message = "You-do-not-have-permission-to-leave-feedback-on-this-Post!"
                         self.set_message_cookie(message)
@@ -1010,7 +1012,7 @@ class Profile(Handler):
             ownerFlag = False
             if self.user.name == user.name:
                 ownerFlag = True
-            self.render("profile.html", u = user, username = user.name, feedbacks = user.createFeedback(), ownerFlag = ownerFlag)
+            self.render("profile.html", u = user, username = user.name, feedbacks = user.createFeedback(), ownerFlag = ownerFlag, currentUser = self.user)
 
 class EditProfile(Handler):
     def get(self):
@@ -1018,7 +1020,7 @@ class EditProfile(Handler):
         if not self.user:
             self.redirect("/login")
         else:
-            self.render("editableProfile.html", user = user)
+            self.render("editableProfile.html", u = user)
 
     def post(self):
         user = User.by_name(self.user.name)
@@ -1107,9 +1109,8 @@ class Logout(Handler):
 class ConfirmPage(Handler):
     def get(self, email_hash):
         registeredFlag = False
-        temp = User.all().filter('email_hash =', email_hash).order('-created').get()
-        userEmailCheck = User.all().filter('email =', temp.email).order('-created')
-        user = userEmailCheck.get()
+        user = User.all().filter('email_hash =', email_hash).order('-created').get()
+        userEmailCheck = User.all().filter('email =', user.email).order('-created')
         userNames = User.all().filter('name =', user.name)
         if user:
             if not user.confirmed:

@@ -2,7 +2,7 @@
   {% block navbar %}
     <li><a href="/">Home</a></li>
     <li><a href="/newpost">New Post</a></li>
-    <li class="active"><a href="/users/{{user.key().id()}}">Profile</a></li>
+    <li class="active"><a href="/users/{{u.key().id()}}">Profile</a></li>
     <li><a href="/created">Created</a></li>
     <li><a href="/applied">Applied</a></li>
     <li><a href="/connections">Connections</a></li>
@@ -13,7 +13,7 @@
   {% block content %}
     <div class="container">
       <form method="post" class="form-signin">
-        <h2>Edit Profile of {{user.name}}</h2>
+        <h2>Edit Profile of {{u.name}}</h2>
         <hr><hr>
         <div>Note that you must enter a new (possibly the same) password to change any information here</div>
 
@@ -44,7 +44,7 @@
 
           <div class="form-group">
             <div>Name</div>
-            <input type="text" name="name" value="{{user.nickname}}" class="form-control" placeholder="{{user.nickname}}" required autofocus>
+            <input type="text" name="name" value="{{u.nickname}}" class="form-control" placeholder="{{u.nickname}}" required autofocus>
           </div>
 
           {% if error_year %}
@@ -52,7 +52,7 @@
               <div class="form-group">
               Class Year
               <select name="year" required autofocus>
-                <option value="{{user.year}}" selected>{{user.year}}</option>
+                <option value="{{u.year}}" selected>{{u.year}}</option>
                 <option value="2014">2014</option>
                 <option value="2015">2015</option>
                 <option value="2016">2016</option>
@@ -69,7 +69,7 @@
             <div class="form-group">
               Class Year
               <select name="year" required autofocus>
-                <option value="{{user.year}}" selected>{{user.year}}</option>
+                <option value="{{u.year}}" selected>{{u.year}}</option>
                 <option value="2014">2014</option>
                 <option value="2015">2015</option>
                 <option value="2016">2016</option>
@@ -84,7 +84,7 @@
           <div class="form-group">
             Major
             <select name="major" required>
-              <option value="{{user.major}}" selected >{{user.major}}</option>
+              <option value="{{u.major}}" selected >{{u.major}}</option>
               <option value="Undeclared">Undeclared</option>
               <option value="American Studies">American Studies</option>
               <option value="Anthropology">Anthropology</option>
@@ -128,7 +128,7 @@
             Description
           </div>
           <div class="form-group">
-            <textarea class="form-control" name="description" rows="10" autofocus>{{user.description}}</textarea>
+            <textarea class="form-control" name="description" rows="10" autofocus>{{u.description}}</textarea>
           </div>
 
         </div>
