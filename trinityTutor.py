@@ -48,6 +48,7 @@ class Handler(webapp2.RequestHandler):
         return render_str(template, **params)
 
     def render(self, template, **kw):
+        self.popupCheck()
         self.write(self.render_str(template, **kw))
 
     #hash cookies
@@ -61,6 +62,28 @@ class Handler(webapp2.RequestHandler):
     def read_secure_cookie(self, name):
         cookie_val = self.request.cookies.get(name)
         return cookie_val and check_secure_val(cookie_val)
+
+
+    def set_message_cookie(self, val):
+        self.response.headers.add_header(
+            'Set-Cookie',
+            'message=%s; Path=/' % val)
+
+    def read_message_cookie(self):
+        cookie_val = self.request.cookies.get("message")
+        return cookie_val
+
+    def delete_message_cookie(self):
+        self.response.headers.add_header('Set-Cookie', 'message=; Path=/')
+
+    def popupCheck(self):
+        if self.read_message_cookie():
+            message = self.read_message_cookie()
+            message = message.replace('-', ' ')
+            # self.render('popup.html', message = message)
+            self.write(self.render_str('popup.html', message=message))
+            self.delete_message_cookie()
+
 
     #set cookies to include user_id
     def login(self, user):
@@ -440,24 +463,23 @@ class Front(Handler):
 
     def get(self):
         # posts = Post.all().filter("created >", self.weekAgo()).order('-created')
+        # self.popupCheck()
         posts = Post.all().order('-created')
         self.render('front.html', posts = posts)
 
     def post(self):
+        #These dropdowns must be error checked
+
         subject = self.request.get('subjectTag')
         sorting = self.request.get('sortingTag')
         if (sorting != 'None') and (subject != 'None'):
             posts = Post.all().filter('subject =', subject).order('-%s' % sorting)
-
         if (subject == 'None') and (sorting == 'None'):
             posts = Post.all().order('-created')
-        
         elif subject == 'None':
             posts = Post.all().order('-%s' % sorting)
-
         elif sorting == 'None':
             posts = Post.all().filter('subject =', subject).order('-created')
-
         self.render('front.html', posts = posts, subjectTag = subject, sortingTag = sorting)    
 
 class ShowAllUsers(Handler):
@@ -509,25 +531,25 @@ class FeedbackPage(Handler):
             if post.selectedTutor:
                 if self.user.key().id() == int(post.selectedTutorID):
                     if post.feedbackOnTutee:
-                        #You already gave feedback
-                        self.render('popup.html', message = "You have already given feedback on this Post!")
+                        message = "You-have-already-given-feedback-on-this-Post!"
+                        self.set_message_cookie(message)
                         self.redirect('/post/%s' % str(post_id))
                     else:
                         self.render("submitFeedback.html", post = post)
                 elif self.user.key().id() == int(post.authorID):
                     if post.feedbackOnTutor:
-                        #You already gave feedback
-                        self.render('popup.html', message = "You have already given feedback on this Post!")
+                        message = 'You-have-already-given-feedback-on-this-Post!'
+                        self.set_message_cookie(message)
                         self.redirect('/post/%s' % str(post_id))
                     else:
                         self.render("submitFeedback.html", post = post)
                 else:
-                    #you do not have permission to leave feedback
-                    self.render('popup.html', message = "You do not have permission to leave feedback on this Post!")
+                    message = "You-do-not-have-permission-to-leave-feedback-on-this-Post!"
+                    self.set_message_cookie(message)
                     self.redirect('/post/%s' % str(post_id))
             else:
-                #no feedback can be given until a tutor has been selected
-                self.render('popup.html', message = "No feedback can be given until a Tutor has been selected!")
+                message = "No-feedback-can-be-given-until-a-Tutor-has-been-selected!"
+                self.set_message_cookie(message)
                 self.redirect('/post/%s' % str(post_id))
         else:
             self.redirect('login')
@@ -565,7 +587,8 @@ class FeedbackPage(Handler):
                     post.feedbackOnTutee = True
                     post.put()
                 else:
-                    self.render('popup.html', message = "You don't have permission to give feedback on this Post!")
+                    message = "You-don't-have-permission-to-give-feedback-on-this-Post!"
+                    self.set_message_cookie(message)
                 self.redirect('/post/%s' % str(post_id))
             else:
                 self.render("submitFeedback.html", post = post, error_rating = error_rating)
@@ -577,20 +600,21 @@ class PostPage(Handler):
         post = Post.by_id(int(post_id))
         if not post:
             self.error(404)
-            #error
-            print "ERROR"
-            self.redirect('/')
         else:   
             if self.user:
                 if post.selectedTutor:
                     if ((self.user.name == post.selectedTutor) or (self.user.name == post.author)):
                         owner = User.by_id(int(post.authorID))
+                        # self.popupCheck()
                         self.render("feedbackOption.html", post = post, owner = owner, commentText = post.createComments())
                     else:
+                        # self.popupCheck()
                         self.render("permalink.html", post = post)
                 elif self.user.name == post.author:
+                    self.popupCheck()
                     self.render("ownerPermalink.html", post = post)
                 else:
+                    # self.popupCheck()
                     self.render("permalink.html", post = post)
             else:
                 self.redirect("/login")
@@ -603,16 +627,27 @@ class PostPage(Handler):
             if post:
                 isApply = self.request.get('apply')
                 isSelect = self.request.get('select')
-
                 if isSelect:
-                    selected = self.request.get('selectList')
-                    if selected:
-                        post.selectedTutor = selected
-                        post.selectedTutorID = str(User.by_name(selected).key().id())
-                        post.put()
-                        post.exchangeContact(self.user)
-                        self.redirect('/connections')
+                    if self.user.name == post.author:
+                        selected = self.request.get('selectList')
+                        if selected:
+                            if not post.selectedTutor:
+                                post.selectedTutor = selected
+                                post.selectedTutorID = str(User.by_name(selected).key().id())
+                                post.put()
+                                post.exchangeContact(self.user)
+                                self.redirect('/connections')
+                            else:
+                                message = "You-have-already-selected-a-Tutor-for-this-Post!"
+                                self.set_message_cookie(message)
+                                self.redirect('/post/%s' % str(post_id))
+                        else:
+                            message = "No-User-was-been-selected!"
+                            self.set_message_cookie(message)
+                            self.redirect('/post/%s' % str(post_id))
                     else:
+                        message = "You-do-not-have-permission-to-select-a-Tutor-for-this-Post!"
+                        self.set_message_cookie(message)
                         self.redirect('/post/%s' % str(post_id))
                 elif isApply:
                     respondent = self.user.name
@@ -621,8 +656,8 @@ class PostPage(Handler):
                         if name == respondent:
                             alreadyAppliedFlag = True
                     if ((alreadyAppliedFlag) or (self.user.name == post.author)):
-                        #you already applied to this post/you created this post
-                        self.render('popup.html', message = "You cannot apply for this Post!")
+                        message = "You-cannot-apply-for-this-Post!"
+                        self.set_message_cookie(message)
                         self.redirect('/post/%s' % post_id)
                     else:
                         post.respondentNameList.append(respondent)
@@ -653,18 +688,12 @@ class PostPage(Handler):
                                 self.render("permalink.html", post = post, error_comment = error_comment)
             else:
                 self.error(404)
-                #error
-                print "ERROR"
-                self.redirect('/')
 
 class EditPost(Handler):
     def get(self, post_id):
         post = Post.by_id(int(post_id))
         if not post:
             self.error(404)
-            #error
-            print "ERROR"
-            self.redirect('/')  
         else:   
             if self.user:
                 if post.selectedTutor:
@@ -672,10 +701,16 @@ class EditPost(Handler):
                         owner = User.by_id(int(post.authorID))
                         self.render("feedbackOption.html", post = post, owner = owner, commentText = post.createComments())
                     else:
+                        message = "You-cannot-edit-a-Post-once-a-Tutor-has-been-selected!"
+                        self.set_message_cookie(message)
+                        # self.popupCheck()
                         self.render("permalink.html", post = post)
                 elif self.user.name == post.author:
                     self.render("editPost.html", post = post)
                 else:
+                    message = "You-do-not-have-permission-to-leave-feedback-on-this-Post!"
+                    self.set_message_cookie(message)
+                    # self.popupCheck()
                     self.render("permalink.html", post = post)
             else:
                 self.redirect("/login")
@@ -684,9 +719,6 @@ class EditPost(Handler):
         post = Post.by_id(int(post_id))
         if not post:
             self.error(404)
-            #error
-            print "ERROR"
-            self.redirect('/')
         else:
             if self.user:
                 if not post.selectedTutor:
@@ -720,8 +752,6 @@ class EditPost(Handler):
                             error_difficulty = "Your difficulty value is invalid."
                             difficultyVerify = False
                         elif ((int(meetings) > 1) and (int(meetings) < 4)):
-                            print "ASDASD"
-                            print difficulty
                             error_difficulty = "Your difficulty value is invalid."
                             difficultyVerify = False
 
@@ -736,10 +766,14 @@ class EditPost(Handler):
                             self.redirect('/post/%s' % post_id)
                         else:
                             error = "Enter information in the required fields! Some of your information may have been reset to default values!"
-                            self.render("editPost.html", title = title, subject = subject, content = content, wage = wage, error_meetings = error_meetings, error_difficulty = error_difficulty)
+                            self.render("editPost.html", title = title, subject = subject, content = content, wage = wage, error_meetings = error_meetings, error_difficulty = error_difficulty, error = error)
                     else:
+                        message = "You-do-not-have-permission-to-leave-feedback-on-this-Post!"
+                        self.set_message_cookie(message)
                         self.redirect('/post/%s' % post_id)
                 else:
+                    message = "You-cannot-edit-a-Post-once-a-Tutor-has-been-selected!"
+                    self.set_message_cookie(message)
                     self.redirect('/post/%s' % post_id)
             else:
                 self.redirect('/login')
@@ -749,9 +783,6 @@ class DeletePost(Handler):
         post = Post.by_id(int(post_id))
         if not post:
             self.error(404)
-            #error
-            print "ERROR"
-            self.redirect('/myaccount')
         else:   
             if self.user:
                 if not post.selectedTutor:
@@ -759,9 +790,12 @@ class DeletePost(Handler):
                         owner = User.by_id(int(post.authorID))
                         self.render("deletePost.html", post = post, owner = owner)
                     else:
-                        self.render("permalink.html", post = post)
+                        message = "You-cannot-delete-a-Post-that-is-not-yours!"
+                        self.set_message_cookie(message)
+                        self.redirect('/post/%s' % post_id)
                 else:
-                    #You have already selected someone so you can't change delete this post
+                    message = "You-cannot-delete-a-Post-once-a-Tutor-has-been-selected!"
+                    self.set_message_cookie(message)
                     self.redirect('/post/%s' % post_id)
             else:
                 self.redirect("/login")
@@ -770,9 +804,6 @@ class DeletePost(Handler):
         post = Post.by_id(int(post_id))
         if not post:
             self.error(404)
-            #error
-            print "ERROR"
-            self.redirect('/myaccount')
         else:   
             if self.user:
                 if not post.selectedTutor:
@@ -780,9 +811,12 @@ class DeletePost(Handler):
                         post.delete()
                         self.redirect('/myaccount')
                     else:
-                        self.render("permalink.html", post = post)
+                        message = "You-cannot-delete-a-Post-that-is-not-yours!"
+                        self.set_message_cookie(message)
+                        self.redirect('/post/%s' % post_id)
                 else:
-                    #You have already selected someone so you can't change delete this post
+                    message = "You-cannot-delete-a-Post-once-a-Tutor-has-been-selected!"
+                    self.set_message_cookie(message)
                     self.redirect('/post/%s' % post_id)
             else:
                 self.redirect("/login")
@@ -829,10 +863,8 @@ class NewPost(Handler):
             if title and subject and content and wageVerify and meetingsVerify and difficultyVerify:
                 post = Post(parent = _key(), title = title, subject = subject, content = content, wage = float(wage), meetings = int(meetings), difficulty = int(difficulty), author = self.user.name, authorID = str(self.user.key().id()))
                 post.put()
-
                 self.user.createdList.append(str(post.key().id()))
                 self.user.put()
-
                 self.redirect('/post/%s' % str(post.key().id()))
             else:
                 error = "Enter information in the required fields! Some of your information may have been reset to default values!"
@@ -923,13 +955,15 @@ class Register(Handler):
                     user = User.register(self.username.lower(), self.password, self.email.lower(), self.name, self.year, self.major, self.description)
                     user.put()
                     user.sendVerificationEmail()
-                    self.render('popup.html', message = "Please check your email for a verification link")
+                    message = "Please-check-your-email-for-a-verification-link!"
+                    self.set_message_cookie(message)
                     self.redirect('/')
             else:
                 user = User.register(self.username.lower(), self.password, self.email.lower(), self.name, self.year, self.major, self.description)
                 user.put()
                 user.sendVerificationEmail()
-                self.render('popup.html', message = "Please check your email for a verification link")
+                message = "Please-check-your-email-for-a-verification-link!"
+                self.set_message_cookie(message)
                 self.redirect('/')
         elif emailCheck:
             for each in emailCheck:
@@ -949,19 +983,22 @@ class Register(Handler):
                     user = User.register(self.username.lower(), self.password, self.email.lower(), self.name, self.year, self.major, self.description)
                     user.put()
                     user.sendVerificationEmail()
-                    self.render('popup.html', message = "Please check your email for a verification link")
+                    message = "Please-check-your-email-for-a-verification-link!"
+                    self.set_message_cookie(message)
                     self.redirect('/')
             else:
                 user = User.register(self.username.lower(), self.password, self.email.lower(), self.name, self.year, self.major, self.description)
                 user.put()
                 user.sendVerificationEmail()
-                self.render('popup.html', message = "Please check your email for a verification link")
+                message = "Please-check-your-email-for-a-verification-link!"
+                self.set_message_cookie(message)
                 self.redirect('/')
         else:
             user = User.register(self.username.lower(), self.password, self.email.lower(), self.name, self.year, self.major, self.description)
             user.put()
             user.sendVerificationEmail()
-            self.render('popup.html', message = "Please check your email for a verification link")
+            message = "Please-check-your-email-for-a-verification-link!"
+            self.set_message_cookie(message)
             self.redirect('/')
 
 class Profile(Handler):
@@ -973,7 +1010,6 @@ class Profile(Handler):
             ownerFlag = False
             if self.user.name == user.name:
                 ownerFlag = True
-            print self
             self.render("profile.html", u = user, username = user.name, feedbacks = user.createFeedback(), ownerFlag = ownerFlag)
 
 class EditProfile(Handler):
@@ -1024,7 +1060,6 @@ class EditProfile(Handler):
 
             if have_error:
                 self.render('editableProfile.html', **params)
-
             else:
                 self.done(**params)
 
@@ -1050,7 +1085,7 @@ class Login(Handler):
         if verifyCheckUser:
             password = self.request.get('password')
             u = User.login(username, password)
-            if u and verifyCheckUser.confirmed:
+            if u and verifyCheckUser.confirmed:    
                 self.login(u)
                 self.redirect('/')
             else:
@@ -1072,8 +1107,9 @@ class Logout(Handler):
 class ConfirmPage(Handler):
     def get(self, email_hash):
         registeredFlag = False
-        user = User.all().filter('email_hash =', email_hash).order('-created').get()
-        userEmailCheck = User.all().filter('email =', user.email).order('-created')
+        temp = User.all().filter('email_hash =', email_hash).order('-created').get()
+        userEmailCheck = User.all().filter('email =', temp.email).order('-created')
+        user = userEmailCheck.get()
         userNames = User.all().filter('name =', user.name)
         if user:
             if not user.confirmed:
@@ -1082,18 +1118,17 @@ class ConfirmPage(Handler):
                         if each.confirmed:
                             registeredFlag = True
                     if registeredFlag:
-                        #throw error because username has already been registered
-                        print "username has already been registered with TT"
+                        message = "This-username-has-already-been-registered-with-TT!-You-must-sign-up-again-with-a-different-username!"
+                        self.set_message_cookie(message)       
                         self.redirect('/')
                     elif userEmailCheck:
-                        print "check above"
                         for each in userEmailCheck:
                             print each.key().id()
                             if each.confirmed:
                                 registeredFlag = True
                         if registeredFlag:
-                            #throw error because email has already been registered
-                            print "email has already been registered with TT"
+                            message = "This-email-address-has-already-been-registered-with-TT!-You-must-sign-up-again-with-a-different-email-address!"
+                            self.set_message_cookie(message) 
                             self.redirect('/')
                         else:
                             self.render("confirmationPage.html", userName = user.name, userConfirmed = user.confirmed, userEmail = user.email)
@@ -1102,7 +1137,8 @@ class ConfirmPage(Handler):
             else:
                 self.render("confirmationPage.html", userName = user.name, userConfirmed = user.confirmed, userEmail = user.email)
         else:
-            print "no such user exists"
+            message = "This-email-address-has-not-been-registered-with-TT!-You-must-sign-up-again!"
+            self.set_message_cookie(message) 
             self.redirect('/')
 
     def post(self, email_hash):
@@ -1117,40 +1153,44 @@ class ConfirmPage(Handler):
                         if each.confirmed:
                             registeredFlag = True
                     if registeredFlag:
-                        #throw error because username has already been registered
-                        print "username has already been registered with TT"
+                        message = "This-username-has-already-been-registered-with-TT!-You-must-sign-up-again-with-a-different-username!"
+                        self.set_message_cookie(message)  
                         self.redirect('/')
                     elif userEmailCheck:
                         for each in userEmailCheck:
                             if each.confirmed:
                                 registeredFlag = True
                         if registeredFlag:
-                            #throw error because email has already been registered
-                            print "email has already been registered with TT"
+                            message = "This-email-address-has-already-been-registered-with-TT!-You-must-sign-up-again-with-a-different-email-address!"
+                            self.set_message_cookie(message) 
                             self.redirect('/')
                         else:
                             user.confirmed = True
                             user.put()
                             user.deleteSameEmail()
                             user.deleteSameName()
-                            self.render('popup.html', message = "Your account has been verified. Please login!")
+                            message = "Your-account-has-been-verified.-Please-login!"
+                            self.set_message_cookie(message) 
                             self.redirect('/login')
                 else:
                     user.confirmed = True
                     user.put()
                     user.deleteSameEmail()
                     user.deleteSameName()
-                    self.render('popup.html', message = "Your account has been verified. Please login!")
+                    message = "Your-account-has-been-verified.-Please-login!"
+                    self.set_message_cookie(message) 
                     self.redirect('/login')
             else:
                 user.confirmed = True
                 user.put()
                 user.deleteSameEmail()
                 user.deleteSameName()
-                self.render('popup.html', message = "Your account has been verified. Please login!")
+                message = "Your-account-has-been-verified.-Please-login!"
+                self.set_message_cookie(message) 
                 self.redirect('/login')
         else:
-            print "no such user exists"
+            message = "This-email-address-has-not-been-registered-with-TT!-You-must-sign-up-again!"
+            self.set_message_cookie(message) 
             self.redirect('/')
 
 class FAQ(Handler):
