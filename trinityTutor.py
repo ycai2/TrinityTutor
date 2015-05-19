@@ -510,20 +510,24 @@ class FeedbackPage(Handler):
                 if self.user.key().id() == int(post.selectedTutorID):
                     if post.feedbackOnTutee:
                         #You already gave feedback
+                        self.render('popup.html', message = "You have already given feedback on this Post!")
                         self.redirect('/post/%s' % str(post_id))
                     else:
                         self.render("submitFeedback.html", post = post)
                 elif self.user.key().id() == int(post.authorID):
                     if post.feedbackOnTutor:
                         #You already gave feedback
+                        self.render('popup.html', message = "You have already given feedback on this Post!")
                         self.redirect('/post/%s' % str(post_id))
                     else:
                         self.render("submitFeedback.html", post = post)
                 else:
                     #you do not have permission to leave feedback
+                    self.render('popup.html', message = "You do not have permission to leave feedback on this Post!")
                     self.redirect('/post/%s' % str(post_id))
             else:
                 #no feedback can be given until a tutor has been selected
+                self.render('popup.html', message = "No feedback can be given until a Tutor has been selected!")
                 self.redirect('/post/%s' % str(post_id))
         else:
             self.redirect('login')
@@ -561,7 +565,7 @@ class FeedbackPage(Handler):
                     post.feedbackOnTutee = True
                     post.put()
                 else:
-                    print "you don't have permission to give feedback on this post"
+                    self.render('popup.html', message = "You don't have permission to give feedback on this Post!")
                 self.redirect('/post/%s' % str(post_id))
             else:
                 self.render("submitFeedback.html", post = post, error_rating = error_rating)
@@ -618,6 +622,7 @@ class PostPage(Handler):
                             alreadyAppliedFlag = True
                     if ((alreadyAppliedFlag) or (self.user.name == post.author)):
                         #you already applied to this post/you created this post
+                        self.render('popup.html', message = "You cannot apply for this Post!")
                         self.redirect('/post/%s' % post_id)
                     else:
                         post.respondentNameList.append(respondent)
@@ -918,11 +923,13 @@ class Register(Handler):
                     user = User.register(self.username.lower(), self.password, self.email.lower(), self.name, self.year, self.major, self.description)
                     user.put()
                     user.sendVerificationEmail()
+                    self.render('popup.html', message = "Please check your email for a verification link")
                     self.redirect('/')
             else:
                 user = User.register(self.username.lower(), self.password, self.email.lower(), self.name, self.year, self.major, self.description)
                 user.put()
                 user.sendVerificationEmail()
+                self.render('popup.html', message = "Please check your email for a verification link")
                 self.redirect('/')
         elif emailCheck:
             for each in emailCheck:
@@ -942,16 +949,19 @@ class Register(Handler):
                     user = User.register(self.username.lower(), self.password, self.email.lower(), self.name, self.year, self.major, self.description)
                     user.put()
                     user.sendVerificationEmail()
+                    self.render('popup.html', message = "Please check your email for a verification link")
                     self.redirect('/')
             else:
                 user = User.register(self.username.lower(), self.password, self.email.lower(), self.name, self.year, self.major, self.description)
                 user.put()
                 user.sendVerificationEmail()
+                self.render('popup.html', message = "Please check your email for a verification link")
                 self.redirect('/')
         else:
             user = User.register(self.username.lower(), self.password, self.email.lower(), self.name, self.year, self.major, self.description)
             user.put()
             user.sendVerificationEmail()
+            self.render('popup.html', message = "Please check your email for a verification link")
             self.redirect('/')
 
 class Profile(Handler):
@@ -1123,18 +1133,21 @@ class ConfirmPage(Handler):
                             user.put()
                             user.deleteSameEmail()
                             user.deleteSameName()
+                            self.render('popup.html', message = "Your account has been verified. Please login!")
                             self.redirect('/login')
                 else:
                     user.confirmed = True
                     user.put()
                     user.deleteSameEmail()
                     user.deleteSameName()
+                    self.render('popup.html', message = "Your account has been verified. Please login!")
                     self.redirect('/login')
             else:
                 user.confirmed = True
                 user.put()
                 user.deleteSameEmail()
                 user.deleteSameName()
+                self.render('popup.html', message = "Your account has been verified. Please login!")
                 self.redirect('/login')
         else:
             print "no such user exists"
