@@ -1,15 +1,15 @@
 <div class="post">
   <div class="post-heading">
     <div>
-      <a href="/afh/{{feedback.AFHID}}">{{AFH.title}}</a>
+      <a href="/post/{{feedback.postID}}">{{post.title}}</a>
       
     </div>
     <div>
-      {% if writer.name == AFH.author: %}
+      {% if writer.name == post.author: %}
         <div> <font color="blue"> TUTOR </font></div>
       {% endif %}
-      {% if writer.name != AFH.author: %}
-        <div> <font color="red">TUTEE </font></div>
+      {% if writer.name != post.author: %}
+        <div> <font color="turquoise">TUTEE </font></div>
       {% endif %}
     </div>
 
@@ -29,17 +29,17 @@
   </div>
 
   <div class="post-content">
-    Subject: {{AFH.subject}}
+    Subject: {{post.subject}}
   </div>
 
   <div class="post-content">
-      {% if AFH.difficulty == 1 %}
+      {% if post.difficulty == 1 %}
         Difficulty: Easy
-      {% elif AFH.difficulty == 2 %}
+      {% elif post.difficulty == 2 %}
         Difficulty: Medium
-      {% elif AFH.difficulty == 3 %}
+      {% elif post.difficulty == 3 %}
         Difficulty: Hard
-      {% elif AFH.difficulty == 4 %}
+      {% elif post.difficulty == 4 %}
         Difficulty: Very Hard
       {% endif %}
   </div>

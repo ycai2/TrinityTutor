@@ -70,3 +70,15 @@ indexes:
   - name: subject
   - name: wage
     direction: desc
+
+- kind: User
+  properties:
+  - name: email
+  - name: created
+    direction: desc
+
+- kind: User
+  properties:
+  - name: email_hash
+  - name: created
+    direction: desc

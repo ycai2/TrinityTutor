@@ -204,6 +204,22 @@ class User(db.Model):
         user.tuteeRating = (oldRating + newRating) / user.numberTuteeJobs
         user.put()
 
+    def deleteSameName(self):
+        userID = self.key().id()
+        userName = self.name
+        users = User.all().filter('name =', userName)
+        for user in users:
+            if user.key().id() != userID:
+                user.delete()
+
+    def deleteSameEmail(self):
+        userID = self.key().id()
+        userEmail = self.email
+        users = User.all().filter('email =', userEmail)
+        for user in users:
+            if user.key().id() != userID:
+                user.delete()
+
     def render(self):
         # self._render_text = self.content.replace('\n', '<br>')
         return render_str("users.html", user = self)
@@ -315,7 +331,7 @@ class Post(db.Model):
         emailPlainContent = """
         Dear %s,
         %s has connected with you on Trinity Tutor.
-        The original posting can be found here <http://www.trinity-tutor.appspot.com/afh/%s>
+        The original posting can be found here <http://www.trinity-tutor.appspot.com/post/%s>
         Please contact %s at %s.
         Best,
         The Trinity Tutor Team
@@ -325,9 +341,9 @@ class Post(db.Model):
         <html><head></head><body>
         Dear %s, <br><br>
         %s has connected with you on Trinity Tutor.<br>
-        The original posting can be found <a href="http://www.trinity-tutor.appspot.com/afh/%s">here</a>.<br>
+        The original posting can be found <a href="http://www.trinity-tutor.appspot.com/post/%s">here</a>.<br>
         If the link does not automatically take you to the correct page, please copy and paste this link into your address bar: <br>
-        http://www.trinity-tutor.appspot.com/afh/%s <br>
+        http://www.trinity-tutor.appspot.com/post/%s <br>
         Please contact %s at %s.<br><br>
         Best, <br>
         The Trinity Tutor Team
@@ -341,11 +357,11 @@ class Post(db.Model):
         selectedTutorID = selectedTutor.key().id()
         userID = user.key().id()
         postID = str(self.key().id())
-        firstConnection = Connection(parent = connections_key(), otherUserID = str(selectedTutorID), AFHID = postID)
+        firstConnection = Connection(parent = connections_key(), otherUserID = str(selectedTutorID), postID = postID)
         firstConnection.put()
         user.connectionList.append(str(firstConnection.key().id()))
         user.put()
-        secondConnection = Connection(parent = connections_key(), otherUserID = str(userID), AFHID = postID)
+        secondConnection = Connection(parent = connections_key(), otherUserID = str(userID), postID = postID)
         secondConnection.put()
         selectedTutor.connectionList.append(str(secondConnection.key().id()))
         selectedTutor.put()
@@ -359,7 +375,7 @@ def feedbacks_key(group = 'default'):
 class Feedback(db.Model):
     receiverID = db.StringProperty(required = True)
     writerID = db.StringProperty(required = True)
-    AFHID = db.StringProperty(required = True)
+    postID = db.StringProperty(required = True)
     rating = db.IntegerProperty(required = True)
     comment = db.StringProperty()
     created = db.DateTimeProperty(auto_now_add = True)
@@ -369,7 +385,7 @@ class Feedback(db.Model):
         return Feedback.get_by_id(fid, parent = feedbacks_key())
 
     def render(self):
-        return render_str("singleFeedback.html", feedback = self, receiver = User.by_id(int(self.receiverID)), writer = User.by_id(int(self.writerID)), AFH = Post.by_id(int(self.AFHID)))
+        return render_str("singleFeedback.html", feedback = self, receiver = User.by_id(int(self.receiverID)), writer = User.by_id(int(self.writerID)), post = Post.by_id(int(self.postID)))
 
 def comments_key(group = 'default'):
     return db.Key.from_path('comments', group)
@@ -391,7 +407,7 @@ def connections_key(group = 'default'):
 
 class Connection(db.Model):
     otherUserID = db.StringProperty(required = True)
-    AFHID = db.StringProperty(required = True)
+    postID = db.StringProperty(required = True)
     created = db.DateTimeProperty(auto_now_add = True)
 
     @classmethod
@@ -399,7 +415,7 @@ class Connection(db.Model):
         return Connection.get_by_id(cid, parent = connections_key())
 
     def render(self):
-        return render_str("singleConnection.html", connection = self, user = User.by_id(int(self.otherUserID)), AFH = Post.by_id(int(self.AFHID)))
+        return render_str("singleConnection.html", connection = self, user = User.by_id(int(self.otherUserID)), post = Post.by_id(int(self.postID)))
 
 class Created(Handler):
     def get(self):
@@ -493,21 +509,21 @@ class FeedbackPage(Handler):
                 if self.user.key().id() == int(post.selectedTutorID):
                     if post.feedbackOnTutee:
                         #You already gave feedback
-                        self.redirect('/afh/%s' % str(post_id))
+                        self.redirect('/post/%s' % str(post_id))
                     else:
                         self.render("submitFeedback.html", post = post)
                 elif self.user.key().id() == int(post.authorID):
                     if post.feedbackOnTutor:
                         #You already gave feedback
-                        self.redirect('/afh/%s' % str(post_id))
+                        self.redirect('/post/%s' % str(post_id))
                     else:
                         self.render("submitFeedback.html", post = post)
                 else:
                     #you do not have permission to leave feedback
-                    self.redirect('/afh/%s' % str(post_id))
+                    self.redirect('/post/%s' % str(post_id))
             else:
                 #no feedback can be given until a tutor has been selected
-                self.redirect('/afh/%s' % str(post_id))
+                self.redirect('/post/%s' % str(post_id))
         else:
             self.redirect('login')
 
@@ -526,7 +542,7 @@ class FeedbackPage(Handler):
             comment = self.request.get('comment')
             if rating and ratingVerify:
                 if self.user.name == post.author:
-                    f = Feedback(parent = feedbacks_key(), receiverID = post.selectedTutorID, writerID = str(self.user.key().id()), AFHID = str(post_id), rating = int(rating), comment = comment)
+                    f = Feedback(parent = feedbacks_key(), receiverID = post.selectedTutorID, writerID = str(self.user.key().id()), postID = str(post_id), rating = int(rating), comment = comment)
                     f.put()
                     user = User.by_id(int(post.selectedTutorID))
                     user.feedbackList.append(str(f.key().id()))
@@ -535,7 +551,7 @@ class FeedbackPage(Handler):
                     post.feedbackOnTutor = True
                     post.put()
                 elif self.user.name == post.selectedTutor:
-                    f = Feedback(parent = feedbacks_key(), receiverID = post.authorID, writerID = post.selectedTutorID, AFHID = str(post_id), rating = int(rating), comment = comment)
+                    f = Feedback(parent = feedbacks_key(), receiverID = post.authorID, writerID = post.selectedTutorID, postID = str(post_id), rating = int(rating), comment = comment)
                     f.put()
                     user = User.by_id(int(post.authorID))
                     user.feedbackList.append(str(f.key().id()))
@@ -545,7 +561,7 @@ class FeedbackPage(Handler):
                     post.put()
                 else:
                     print "you don't have permission to give feedback on this post"
-                self.redirect('/afh/%s' % str(post_id))
+                self.redirect('/post/%s' % str(post_id))
             else:
                 self.render("submitFeedback.html", post = post, error_rating = error_rating)
         else:
@@ -592,7 +608,7 @@ class PostPage(Handler):
                         post.exchangeContact(self.user)
                         self.redirect('/connections')
                     else:
-                        self.redirect('/afh/%s' % str(post_id))
+                        self.redirect('/post/%s' % str(post_id))
                 elif isApply:
                     respondent = self.user.name
                     alreadyAppliedFlag = False
@@ -601,19 +617,19 @@ class PostPage(Handler):
                             alreadyAppliedFlag = True
                     if ((alreadyAppliedFlag) or (self.user.name == post.author)):
                         #you already applied to this post/you created this post
-                        self.redirect('/afh/%s' % post_id)
+                        self.redirect('/post/%s' % post_id)
                     else:
                         post.respondentNameList.append(respondent)
                         post.respondentIDList.append(str(self.user.key().id()))
                         post.put()
                         self.user.appliedList.append(str(post.key().id()))
                         self.user.put()
-                        self.redirect('/afh/%s' % post_id)
+                        self.redirect('/post/%s' % post_id)
                 else:
                     content = self.request.get('content').replace('\n', '<br>')
                     if not post:
                         self.error(404)
-                        self.redirect('/afh/%s' % str(post_id))
+                        self.redirect('/post/%s' % str(post_id))
                     else:
                         if content:
                             created = datetime.now() - timedelta(hours=5)
@@ -621,7 +637,7 @@ class PostPage(Handler):
                             comment.put()
                             post.commentIDList.append(str(comment.key().id()))
                             post.put()
-                            self.redirect('/afh/%s' % str(post_id))
+                            self.redirect('/post/%s' % str(post_id))
                         else:
                             #no content entered
                             error_comment = "No content was entered!"
@@ -711,14 +727,14 @@ class EditPost(Handler):
                             post.meetings = int(meetings)
                             post.difficulty = int(difficulty)
                             post.put()
-                            self.redirect('/afh/%s' % post_id)
+                            self.redirect('/post/%s' % post_id)
                         else:
                             error = "Enter information in the required fields! Some of your information may have been reset to default values!"
-                            self.render("editPost.html", title = title, subject = subject, content = content, wage = wage, error_meetings = error_meetings, error_difficulty=error_difficulty)
+                            self.render("editPost.html", title = title, subject = subject, content = content, wage = wage, error_meetings = error_meetings, error_difficulty = error_difficulty)
                     else:
-                        self.redirect('/afh/%s' % post_id)
+                        self.redirect('/post/%s' % post_id)
                 else:
-                    self.redirect('/afh/%s' % post_id)
+                    self.redirect('/post/%s' % post_id)
             else:
                 self.redirect('/login')
 
@@ -740,7 +756,7 @@ class DeletePost(Handler):
                         self.render("permalink.html", post = post)
                 else:
                     #You have already selected someone so you can't change delete this post
-                    self.redirect('/afh/%s' % post_id)
+                    self.redirect('/post/%s' % post_id)
             else:
                 self.redirect("/login")
 
@@ -761,7 +777,7 @@ class DeletePost(Handler):
                         self.render("permalink.html", post = post)
                 else:
                     #You have already selected someone so you can't change delete this post
-                    self.redirect('/afh/%s' % post_id)
+                    self.redirect('/post/%s' % post_id)
             else:
                 self.redirect("/login")
 
@@ -811,7 +827,7 @@ class NewPost(Handler):
                 self.user.createdList.append(str(post.key().id()))
                 self.user.put()
 
-                self.redirect('/afh/%s' % str(post.key().id()))
+                self.redirect('/post/%s' % str(post.key().id()))
             else:
                 error = "Enter information in the required fields! Some of your information may have been reset to default values!"
                 self.render("newpost.html", title = title, subject = subject, content = content, wage = wage, error_meetings = error_meetings, error_difficulty = error_difficulty, error = error)
@@ -922,7 +938,7 @@ class Profile(Handler):
             ownerFlag = False
             if self.user.name == user.name:
                 ownerFlag = True
-            self.render("profile.html", u = user, feedbacks = self.user.createFeedback(), currentUsername = self.user.name, ownerFlag = ownerFlag)
+            self.render("profile.html", user = user, feedbacks = self.user.createFeedback(), currentUsername = self.user.name, ownerFlag = ownerFlag)
 
 class EditProfile(Handler):
     def get(self):
@@ -1020,109 +1036,79 @@ class Logout(Handler):
 class ConfirmPage(Handler):
     def get(self, email_hash):
         registeredFlag = False
-        userEmailCheck = User.all().filter('email_hash =', email_hash).order('-created')
-        userNameCheck = User.all().filter('name = ', self.username)
-        user = User.all().filter('email_hash =', email_hash).get()
+        user = User.all().filter('email_hash =', email_hash).order('-created').get()
+        userEmailCheck = User.all().filter('email =', user.email).order('-created')
+        userNames = User.all().filter('name =', user.name)
         if user:
-            if userEmailCheck:
-                for userEmail in userEmailCheck:
-                    if userEmail.confirmed:
-                        registeredFlag = True
-                if registeredFlag:
-                    #throw error because email has already been registered
-                    print "email has already been registered with TT"
-                else:
-                    if userNameCheck:
-                        for userName in userNameCheck:
-                            if userName.confirmed:
-                                registeredFlag = True
-                        if registeredFlag:
-                            #throw error because username is already registered
-                            print "username has already been registered with TT"
-                        else:
-                            self.render("confirmationPage.html", userName = userEmailCheck.name, userConfirmed = userEmailCheck.confirmed)
-                    else:
-                        self.render("confirmationPage.html", userName = userEmailCheck.name, userConfirmed = userEmailCheck.confirmed)
-            elif userNameCheck:
-                for userName in userNameCheck:
-                    if userName.confirmed:
-                        registeredFlag = True
-                if registeredFlag:
-                    #throw error because username is already registered
-                    print "username has already been registered with TT"
-                else:
-                    if userEmailCheck:
-                        for userEmail in userEmailCheck:
-                            if userEmail.confirmed:
+            if not user.confirmed:
+                if userNames:
+                    for each in userNames:
+                        if each.confirmed:
+                            registeredFlag = True
+                    if registeredFlag:
+                        #throw error because username has already been registered
+                        print "username has already been registered with TT"
+                        self.redirect('/')
+                    elif userEmailCheck:
+                        print "check above"
+                        for each in userEmailCheck:
+                            print each.key().id()
+                            if each.confirmed:
                                 registeredFlag = True
                         if registeredFlag:
                             #throw error because email has already been registered
                             print "email has already been registered with TT"
+                            self.redirect('/')
                         else:
-                            self.render("confirmationPage.html", userName = userEmailCheck.name, userConfirmed = userEmailCheck.confirmed)
-                    else:
-                        self.render("confirmationPage.html", userName = userEmailCheck.name, userConfirmed = userEmailCheck.confirmed)
+                            self.render("confirmationPage.html", userName = user.name, userConfirmed = user.confirmed)
+                else:
+                    self.render("confirmationPage.html", userName = user.name, userConfirmed = user.confirmed)
             else:
-                self.render("confirmationPage.html", userName = userEmailCheck.name, userConfirmed = userEmailCheck.confirmed)
+                self.render("confirmationPage.html", userName = user.name, userConfirmed = user.confirmed)
         else:
             print "no such user exists"
             self.redirect('/')
 
     def post(self, email_hash):
         registeredFlag = False
-        userEmailCheck = User.all().filter('email_hash =', email_hash).order('-created')
-        userNameCheck = User.all().filter('name = ', self.username)
-        user = User.all().filter('email_hash =', email_hash).get()
+        user = User.all().filter('email_hash =', email_hash).order('-created').get()
+        userEmailCheck = User.all().filter('email =', user.email).order('-created')
+        userNames = User.all().filter('name =', user.name)
         if user:
-            if userEmailCheck:
-                for userEmail in userEmailCheck:
-                    if userEmail.confirmed:
-                        registeredFlag = True
-                if registeredFlag:
-                    #throw error because email has already been registered
-                    print "email has already been registered with TT"
-                else:
-                    if userNameCheck:
-                        for userName in userNameCheck:
-                            if userName.confirmed:
-                                registeredFlag = True
-                        if registeredFlag:
-                            #throw error because username is already registered
-                            print "username has already been registered with TT"
-                        else:
-                            user.confirmed = True
-                            user.put()
-                            self.redirect('/login')
-                    else:
-                        user.confirmed = True
-                        user.put()
-                        self.redirect('/login')
-            elif userNameCheck:
-                for userName in userNameCheck:
-                    if userName.confirmed:
-                        registeredFlag = True
-                if registeredFlag:
-                    #throw error because username is already registered
-                    print "username has already been registered with TT"
-                else:
-                    if userEmailCheck:
-                        for userEmail in userEmailCheck:
-                            if userEmail.confirmed:
+            if not user.confirmed:
+                if userNames:
+                    for each in userNames:
+                        if each.confirmed:
+                            registeredFlag = True
+                    if registeredFlag:
+                        #throw error because username has already been registered
+                        print "username has already been registered with TT"
+                        self.redirect('/')
+                    elif userEmailCheck:
+                        for each in userEmailCheck:
+                            if each.confirmed:
                                 registeredFlag = True
                         if registeredFlag:
                             #throw error because email has already been registered
                             print "email has already been registered with TT"
+                            self.redirect('/')
                         else:
                             user.confirmed = True
                             user.put()
+                            user.deleteSameEmail()
+                            user.deleteSameName()
                             self.redirect('/login')
-                    else:
-                        user.confirmed = True
-                        user.put()
-                        self.redirect('/login')
+                else:
+                    user.confirmed = True
+                    user.put()
+                    user.deleteSameEmail()
+                    user.deleteSameName()
+                    self.redirect('/login')
             else:
                 user.confirmed = True
                 user.put()
+                user.deleteSameEmail()
+                user.deleteSameName()
                 self.redirect('/login')
         else:
             print "no such user exists"
@@ -1146,9 +1132,9 @@ class CronTask(Handler):
 
 
 app = webapp2.WSGIApplication([('/', Front),
-                               ('/afh/([0-9]+)(?:.json)?', PostPage),
-                               ('/editafh/([0-9]+)(?:.json)?', EditPost),
-                               ('/deleteafh/([0-9]+)(?:.json)?', DeletePost),
+                               ('/post/([0-9]+)(?:.json)?', PostPage),
+                               ('/editpost/([0-9]+)(?:.json)?', EditPost),
+                               ('/deletepost/([0-9]+)(?:.json)?', DeletePost),
                                ('/feedback/([0-9]+)(?:.json)?', FeedbackPage),
                                ('/confirmation/([a-zA-Z0-9]+)', ConfirmPage),
                                ('/crontask', CronTask),
