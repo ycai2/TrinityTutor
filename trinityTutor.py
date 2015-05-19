@@ -157,6 +157,39 @@ class User(db.Model):
         if user and valid_pw(name, pw, user.pw_hash):
             return user
 
+    def sendVerificationEmail(self):
+        userName = self.nickname
+        userEmail = self.email
+        userEmailHash = self.email_hash
+        message = mail.EmailMessage(sender="Trinity Tutor Support <trinitytutortt@gmail.com>", subject = "Verify your account")
+        message.to = self.email
+        bodyContent = """
+        Dear %s,
+        Your Trinity Tutor account has been approved. <br>
+        Click here to verify your account. <br>
+        http://www.trinity-tutor.appspot.com/confirmation/%s <br>
+        Your Trinity Tutor account has been approved. <br>
+        Click here to verify your account. http://www.trinity-tutor.appspot.com/confirmation/%s <br>
+        Please let us know if you have any questions. <br>
+        The Trinity Tutor Team
+        """
+        message.body = bodyContent % (userName, userEmailHash, userEmailHash)
+        emailContent = """
+        <html><head></head><body>
+        Dear %s, <br><br>
+        Your Trinity Tutor account has been approved. <br>
+        Please let us know if you have any questions.<br>
+        <a href="http://www.trinity-tutor.appspot.com/confirmation/%s">Click here to verify your account.</a><br>
+        If the link does not automatically take you to the correct page, please copy and paste this link into your address bar: <br>
+        http://www.trinity-tutor.appspot.com/confirmation/%s
+        <br><br>
+        Best, <br>
+        The Trinity Tutor Team
+        </body></html>
+        """
+        message.html = emailContent % (userName, userEmailHash, userEmailHash)
+        message.send()
+
     def calculateTutorRating(self, newRating):
         user = self
         oldRating = user.numberTutorJobs * user.tutorRating
@@ -186,6 +219,15 @@ class User(db.Model):
             if post:
                 createdText += post.render()
         return createdText
+
+    def createFeedback(self):
+        feedbackList = self.feedbackList
+        feedbackText = ""
+        for feedbackID in feedbackList:
+            feedback = Feedback.by_id(int(feedbackID))
+            if feedback:
+                feedbackText += feedback.render()
+        return feedbackText
 
     def renderApplied(self):
         appliedList = self.appliedList
@@ -380,23 +422,24 @@ class Front(Handler):
         return datetime.now() - timedelta(seconds = (7 * 24 * 60 * 60))
 
     def get(self):
-        posts = Post.all().filter("created >", self.weekAgo()).order('-created')
+        # posts = Post.all().filter("created >", self.weekAgo()).order('-created')
+        posts = Post.all().order('-created')
         self.render('front.html', posts = posts)
 
     def post(self):
         subject = self.request.get('subjectTag')
         sorting = self.request.get('sortingTag')
         if (sorting != 'None') and (subject != 'None'):
-            posts = greetings = Post.all().filter('subject =', subject).filter("created >", self.weekAgo()).order('-%s' % sorting)
+            posts = Post.all().filter('subject =', subject).order('-%s' % sorting)
 
         if (subject == 'None') and (sorting == 'None'):
-            posts = greetings = Post.all().filter("created >", self.weekAgo()).order('-created')
+            posts = Post.all().order('-created')
         
         elif subject == 'None':
-            posts = greetings = Post.all().filter("created >", self.weekAgo()).order('-%s' % sorting)
+            posts = Post.all().order('-%s' % sorting)
 
         elif sorting == 'None':
-            posts = greetings = Post.all().filter('subject =', subject).filter("created >", self.weekAgo()).order('-created')
+            posts = Post.all().filter('subject =', subject).order('-created')
 
         self.render('front.html', posts = posts, subjectTag = subject, sortingTag = sorting)    
 
@@ -454,7 +497,6 @@ class FeedbackPage(Handler):
                     else:
                         self.render("submitFeedback.html", post = post)
                 elif self.user.key().id() == int(post.authorID):
-                    print "ASDLKJASDLKASD HERE I AM"
                     if post.feedbackOnTutor:
                         #You already gave feedback
                         self.redirect('/afh/%s' % str(post_id))
@@ -522,7 +564,7 @@ class PostPage(Handler):
                 if post.selectedTutor:
                     if ((self.user.name == post.selectedTutor) or (self.user.name == post.author)):
                         owner = User.by_id(int(post.authorID))
-                        self.render("feedbackOption.html", post = post, owner = owner)
+                        self.render("feedbackOption.html", post = post, owner = owner, commentText = post.createComments())
                     else:
                         self.render("permalink.html", post = post)
                 elif self.user.name == post.author:
@@ -606,7 +648,7 @@ class EditPost(Handler):
                 if post.selectedTutor:
                     if ((self.user.name == post.author) or (self.user.name == post.selectedTutor)):
                         owner = User.by_id(int(post.authorID))
-                        self.render("feedbackOption.html", post = post, owner = owner)
+                        self.render("feedbackOption.html", post = post, owner = owner, commentText = post.createComments())
                     else:
                         self.render("permalink.html", post = post)
                 elif self.user.name == post.author:
@@ -672,7 +714,7 @@ class EditPost(Handler):
                             self.redirect('/afh/%s' % post_id)
                         else:
                             error = "Enter information in the required fields! Some of your information may have been reset to default values!"
-                            self.render("editPost.html", title = title, subject=subject, content=content, wage = wage, error_meetings=error_meetings, error_difficulty=error_difficulty)
+                            self.render("editPost.html", title = title, subject = subject, content = content, wage = wage, error_meetings = error_meetings, error_difficulty=error_difficulty)
                     else:
                         self.redirect('/afh/%s' % post_id)
                 else:
@@ -685,13 +727,15 @@ class DeletePost(Handler):
         post = Post.by_id(int(post_id))
         if not post:
             self.error(404)
+            #error
+            print "ERROR"
             self.redirect('/myaccount')
         else:   
             if self.user:
                 if not post.selectedTutor:
                     if (self.user.key().id() == int(post.authorID)):
                         owner = User.by_id(int(post.authorID))
-                        self.render("deletePost.html", p = post, owner = owner)
+                        self.render("deletePost.html", post = post, owner = owner)
                     else:
                         self.render("permalink.html", post = post)
                 else:
@@ -704,6 +748,8 @@ class DeletePost(Handler):
         post = Post.by_id(int(post_id))
         if not post:
             self.error(404)
+            #error
+            print "ERROR"
             self.redirect('/myaccount')
         else:   
             if self.user:
@@ -768,7 +814,7 @@ class NewPost(Handler):
                 self.redirect('/afh/%s' % str(post.key().id()))
             else:
                 error = "Enter information in the required fields! Some of your information may have been reset to default values!"
-                self.render("newpost.html", title = title, subject=subject, content=content, wage = wage, error_meetings=error_meetings, error_difficulty=error_difficulty, error = error)
+                self.render("newpost.html", title = title, subject = subject, content = content, wage = wage, error_meetings = error_meetings, error_difficulty = error_difficulty, error = error)
         else:
             self.redirect('/login')
 
@@ -784,7 +830,7 @@ EMAIL_RE  = re.compile(r"^[\S]+@[\S]+\.[\S]+$")
 def valid_email(email):
     return email and EMAIL_RE.match(email)
 
-class Signup(Handler):
+class Register(Handler):
     def get(self):
         self.render("signup-form.html")
 
@@ -796,7 +842,6 @@ class Signup(Handler):
         self.verify = self.request.get('verify')
         if '@' not in self.request.get('email'):
             self.email = self.request.get('email')+'@trincoll.edu'
-            
         else: 
             self.email = self.request.get('email')
             have_email_error = True
@@ -805,94 +850,67 @@ class Signup(Handler):
         self.year = self.request.get('year')
         self.major = self.request.get('major')
         self.description = self.request.get('description')
-
         params = dict(username = self.username,
                       email = self.request.get('email'),
                       name = self.name,
                       year = self.year,
                       major = self.major,
                       description = self.description)
-
         if not valid_username(self.username):
             params['error_username'] = "That's not a valid username."
             have_error = True
-
         if not valid_password(self.password):
             params['error_password'] = "Password has to be at least 3 character/numbers"
             have_error = True
-            
         elif self.password != self.verify:
             params['error_verify'] = "Your passwords didn't match."
             have_error = True
-
         elif not (self.year.isdigit()):
             params['error_year'] = "Your class year must be an integer."
             have_error = True
-
         elif ((int(self.year) < 2014) or (int(self.year) > 2020)):
             params['error_year'] = "Your class year must be an integer between 2014 and 2020."
             have_error = True
-
         if (not valid_email(self.email)) or have_email_error:
             params['error_email'] = "That's not a valid email."
             have_error = True
-
         if have_error:
             self.render('signup-form.html', **params)
-
         else:
             self.done(**params)
 
-            #remove this done function
-    def done(self, *a, **kw):
-        raise NotImplementedError
-
-class Register(Signup):
     def done(self, **params):
-        u = User.by_name(self.username)
-        emailCheck = User.all().filter('email =', self.email).get()
-        if u:
-            msg = 'That user already exists.'
-            self.render('signup-form.html', error_username = msg, **params)
+        userCheck = User.all().filter('name = ', self.username)
+        emailCheck = User.all().filter('email =', self.email)
+        registeredFlag = False
+        if userCheck:
+            for each in userCheck:
+                if each.confirmed:
+                    registeredFlag = True
+            if registeredFlag:
+                message = 'That user already exists.'
+                self.render('signup-form.html', error_username = message, **params)
+            else:
+                user = User.register(self.username.lower(), self.password, self.email.lower(), self.name, self.year, self.major, self.description)
+                user.put()
+                user.sendVerificationEmail()
+                self.redirect('/')
         elif emailCheck:
-            msg = "That email is already registered with Trinity Tutor."
-            self.render('signup-form.html', error_email = msg, **params)
+            for each in emailCheck:
+                if each.confirmed:
+                    registeredFlag = True
+            if registeredFlag:
+                message = "That email is already registered with Trinity Tutor."
+                self.render('signup-form.html', error_email = message, **params)
+            else:
+                user = User.register(self.username.lower(), self.password, self.email.lower(), self.name, self.year, self.major, self.description)
+                user.put()
+                user.sendVerificationEmail()
+                self.redirect('/')
         else:
-            u = User.register(self.username.lower(), self.password, self.email.lower(), self.name, self.year, self.major, self.description)
-            u.put()
-
-            insertEmail = u.email_hash
-            insertName = u.nickname
-            message = mail.EmailMessage(sender="Trinity Tutor Support <stevenyee64@gmail.com>", subject="Verify your account")
-            message.to = self.email
-            insertEmail = u.email_hash
-            insertName = u.nickname
-            bodyContent = """
-            Your Trinity Tutor account has been approved. <br>
-            Click here to verify your account. <br>
-            http://www.trinity-tutor.appspot.com/confirmation/%s <br>
-            Your Trinity Tutor account has been approved. <br>
-            Click here to verify your account. http://www.trinity-tutor.appspot.com/confirmation/%s <br>
-            Please let us know if you have any questions. <br>
-            The Trinity Tutor Team
-            """
-            message.body = bodyContent % (insertEmail, insertEmail)
-            emailContent = """
-            <html><head></head><body>
-            Dear %s, <br><br>
-            Your Trinity Tutor account has been approved. <br>
-            Please let us know if you have any questions.<br>
-            <a href="http://www.trinity-tutor.appspot.com/confirmation/%s">Click here to verify your account.</a><br>
-            If the link does not automatically take you to the correct page, please copy and paste this link into your address bar: <br>
-            http://www.trinity-tutor.appspot.com/confirmation/%s
-            <br><br>
-            Best, <br>
-            The Trinity Tutor Team
-            </body></html>
-            """
-            message.html = emailContent % (insertName, insertEmail, insertEmail)
-            message.send()
-
+            user = User.register(self.username.lower(), self.password, self.email.lower(), self.name, self.year, self.major, self.description)
+            user.put()
+            user.sendVerificationEmail()
             self.redirect('/')
 
 class Profile(Handler):
@@ -902,24 +920,17 @@ class Profile(Handler):
             self.redirect("/login")
         else:
             ownerFlag = False
-            feedbacks = user.feedbackList
-            feedbackText = ""
-            for thing in feedbacks:
-                each = Feedback.by_id(int(thing))
-                if each:
-                    feedbackText += each.render()
             if self.user.name == user.name:
                 ownerFlag = True
-            self.render("profile.html", u = user, feedbacks = feedbackText, currentUsername = self.user.name, ownerFlag = ownerFlag)
+            self.render("profile.html", u = user, feedbacks = self.user.createFeedback(), currentUsername = self.user.name, ownerFlag = ownerFlag)
 
 class EditProfile(Handler):
     def get(self):
-        print self.user.name
         user = User.by_name(self.user.name)
         if not self.user:
             self.redirect("/login")
         else:
-            self.render("editableProfile.html", u = user)
+            self.render("editableProfile.html", user = user)
 
     def post(self):
         user = User.by_name(self.user.name)
@@ -974,7 +985,6 @@ class EditProfile(Handler):
         user.year = int(self.year)
         user.major = self.major
         user.description = self.description
-
         user.put()
         self.redirect('/users/%s' % user.key().id())
 
@@ -1009,26 +1019,130 @@ class Logout(Handler):
 
 class ConfirmPage(Handler):
     def get(self, email_hash):
+        registeredFlag = False
+        userEmailCheck = User.all().filter('email_hash =', email_hash).order('-created')
+        userNameCheck = User.all().filter('name = ', self.username)
         user = User.all().filter('email_hash =', email_hash).get()
         if user:
-            self.render("confirmationPage.html", userName = user.name, userConfirmed = user.confirmed)
+            if userEmailCheck:
+                for userEmail in userEmailCheck:
+                    if userEmail.confirmed:
+                        registeredFlag = True
+                if registeredFlag:
+                    #throw error because email has already been registered
+                    print "email has already been registered with TT"
+                else:
+                    if userNameCheck:
+                        for userName in userNameCheck:
+                            if userName.confirmed:
+                                registeredFlag = True
+                        if registeredFlag:
+                            #throw error because username is already registered
+                            print "username has already been registered with TT"
+                        else:
+                            self.render("confirmationPage.html", userName = userEmailCheck.name, userConfirmed = userEmailCheck.confirmed)
+                    else:
+                        self.render("confirmationPage.html", userName = userEmailCheck.name, userConfirmed = userEmailCheck.confirmed)
+            elif userNameCheck:
+                for userName in userNameCheck:
+                    if userName.confirmed:
+                        registeredFlag = True
+                if registeredFlag:
+                    #throw error because username is already registered
+                    print "username has already been registered with TT"
+                else:
+                    if userEmailCheck:
+                        for userEmail in userEmailCheck:
+                            if userEmail.confirmed:
+                                registeredFlag = True
+                        if registeredFlag:
+                            #throw error because email has already been registered
+                            print "email has already been registered with TT"
+                        else:
+                            self.render("confirmationPage.html", userName = userEmailCheck.name, userConfirmed = userEmailCheck.confirmed)
+                    else:
+                        self.render("confirmationPage.html", userName = userEmailCheck.name, userConfirmed = userEmailCheck.confirmed)
+            else:
+                self.render("confirmationPage.html", userName = userEmailCheck.name, userConfirmed = userEmailCheck.confirmed)
         else:
-            #say user does not exist
+            print "no such user exists"
             self.redirect('/')
 
     def post(self, email_hash):
+        registeredFlag = False
+        userEmailCheck = User.all().filter('email_hash =', email_hash).order('-created')
+        userNameCheck = User.all().filter('name = ', self.username)
         user = User.all().filter('email_hash =', email_hash).get()
         if user:
-            user.confirmed = True
-            user.put()
-            self.redirect('/login')
+            if userEmailCheck:
+                for userEmail in userEmailCheck:
+                    if userEmail.confirmed:
+                        registeredFlag = True
+                if registeredFlag:
+                    #throw error because email has already been registered
+                    print "email has already been registered with TT"
+                else:
+                    if userNameCheck:
+                        for userName in userNameCheck:
+                            if userName.confirmed:
+                                registeredFlag = True
+                        if registeredFlag:
+                            #throw error because username is already registered
+                            print "username has already been registered with TT"
+                        else:
+                            user.confirmed = True
+                            user.put()
+                            self.redirect('/login')
+                    else:
+                        user.confirmed = True
+                        user.put()
+                        self.redirect('/login')
+            elif userNameCheck:
+                for userName in userNameCheck:
+                    if userName.confirmed:
+                        registeredFlag = True
+                if registeredFlag:
+                    #throw error because username is already registered
+                    print "username has already been registered with TT"
+                else:
+                    if userEmailCheck:
+                        for userEmail in userEmailCheck:
+                            if userEmail.confirmed:
+                                registeredFlag = True
+                        if registeredFlag:
+                            #throw error because email has already been registered
+                            print "email has already been registered with TT"
+                        else:
+                            user.confirmed = True
+                            user.put()
+                            self.redirect('/login')
+                    else:
+                        user.confirmed = True
+                        user.put()
+                        self.redirect('/login')
+            else:
+                user.confirmed = True
+                user.put()
+                self.redirect('/login')
         else:
-            #say user does not exist
+            print "no such user exists"
             self.redirect('/')
 
 class FAQ(Handler):
     def get(self):
         self.render("faq.html")
+
+class CronTask(Handler):
+    def weekAgo(self):
+        return datetime.now() - timedelta(seconds = (7 * 24 * 60 * 60))
+
+    def get(self):
+        posts = Post.all().order('-created')
+        deadline = self.weekAgo()
+        for post in posts:
+            if not post.selectedTutor:
+                if post.created < deadline:
+                    post.delete()
 
 
 app = webapp2.WSGIApplication([('/', Front),
@@ -1037,6 +1151,7 @@ app = webapp2.WSGIApplication([('/', Front),
                                ('/deleteafh/([0-9]+)(?:.json)?', DeletePost),
                                ('/feedback/([0-9]+)(?:.json)?', FeedbackPage),
                                ('/confirmation/([a-zA-Z0-9]+)', ConfirmPage),
+                               ('/crontask', CronTask),
                                ('/newpost', NewPost),
                                ('/signup', Register),
                                ('/login', Login),

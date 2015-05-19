@@ -18,13 +18,14 @@
 <div> Hello {{userName}} </div>
 {% if not userConfirmed: %}
 <form method="post" class="jumbotron">
+  <div>If you are not trying to register "{{userName}}," you must sign up again with your desired username.</div>
   <input type="submit" name="confirm" class="btn btn-primary" value="Verify your account"></input>
   <br><br>
 </form>
 {% endif %}
 {% if userConfirmed: %}
 <div class="jumbotron">
-  Your account has already been verified.
+  Your account "{{userName}}" has already been verified.
 </div>
 {% endif %}
 
