@@ -9,7 +9,10 @@ A prototype of the Trinity Tutor Application using Python3, hosted on Google App
 
 <b>Public Domain</b>: http://trinity-tutor.appspot.com<br>
 
-<b>Functionality</b>: This blog allows any user to register for accounts, post blogs, and adding comments after each post. 
+<b>Functionality</b>: This blog allows any user to register for accounts, post blogs, and adding comments after each post.
+
+<b>Version 1: May 1, 2015<b>
+<b>Version 2: May 19, 2015<b>
 
 Google App Engine Launcher Run instructions: 
 =============================================
