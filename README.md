@@ -13,6 +13,7 @@ A prototype of the Trinity Tutor Application using Python3, hosted on Google App
 
 <b>Version 1</b>: May 1, 2015<br>
 <b>Version 2</b>: May 19, 2015<br>
+<b>Version 3</b>: June 18, 2015<br>
 
 Google App Engine Launcher Run instructions: 
 =============================================
