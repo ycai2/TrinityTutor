@@ -15,6 +15,8 @@
 
   <!-- Latest compiled and minified JavaScript -->
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.0/js/bootstrap.min.js"></script>
+
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
   
   <script src="https://apis.google.com/js/client:platform.js" async defer></script>
 </head>
@@ -46,13 +48,13 @@
             <li><a href="/connections">Connections</a></li>
             <li><a href="/users">Users</a></li>
           {% endif %}
-          <li><a href="/FAQ">F&ampQ</a> 
+          <li><a href="/FAQ">FAQ</a></li>
           {% endblock %}
         </ul>
         <div class="navbar-form navbar-right">
           {% if user %}
             <p id="user" class="navbar-text"><a href="/myaccount">{{user.name}}</a></p>
-            <a class="btn btn-warning" href="/logout">logout</a>
+            <a class="btn btn-warning" href="/logout">Logout</a>
           {% else %}
 
             <a class="btn btn-success" href="/login">Login</a>

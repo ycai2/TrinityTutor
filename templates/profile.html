@@ -2,71 +2,77 @@
     {% block navbar %}
         <li><a href="/">Home</a></li>
         <li><a href="/newpost">New Post</a></li>
-        <li class="active"><a href="/users/{{u.key().id()}}">Profile</a></li>
+        <li class="active"><a href="/users/{{currentUser.key().id()}}">Profile</a></li>
         <li><a href="/created">Created</a></li>
         <li><a href="/applied">Applied</a></li>
         <li><a href="/connections">Connections</a></li>
         <li><a href="/users">Users</a></li>
-        <li><a href="/FAQ">F&ampQ</a> 
+        <li><a href="/FAQ">FAQ</a></li>
     {% endblock %}
 
     {% block content %}
-    <div class="">
-        <div class="col-md-6">
-            <table class="table table-striped">
-                <thead>
-                  <tr>
-                    <th>{{u.name}}'s Profile</th>
-                    <th></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td>Name</td>
-                    <td>{{u.nickname}}</td>
-                  </tr>
-                  <tr>
-                    <td>Graduation Year</td>
-                    <td>{{u.year}}</td>
-                  </tr>
-                  <tr>
-                    <td>Major</td>
-                    <td>{{u.major}}</td>
-                  </tr>
-                  {% if u.name == currentUsername: %}
-                  <tr>
-                    <td>Email</td>
-                    <td>{{u.email}}</td>
-                  </tr>
-                  {% endif %}
-                  <tr>
-                    <td>Tutor Rating</td>
-                    <td>{{u.tutorRating}}</td>
-                  </tr>
-                  <tr>
-                    <td>Number of Jobs as a Tutor</td>
-                    <td>{{u.numberTutorJobs}}</td>
-                  </tr>
-                  <tr>
-                    <td>Tutee Rating</td>
-                    <td>{{u.tuteeRating}}</td>
-                  </tr>
-                  <tr>
-                    <td>Number of Jobs as a Tutee</td>
-                    <td>{{u.numberTuteeJobs}}</td>
-                  </tr>
-                  <tr>
-                    <td>Description</td>
-                    <td>{{u.description}}</td>
-                  </tr>
-                </tbody>
-            </table>
-        </div>
-    </div>
+      {% if ownerFlag: %}
+        <a href="/editmyaccount">Edit Account Information</a>
+        <div>This will force you to reset your password</div>
+        <hr>
+        <hr>
+      {% endif %}
 
-    <div>
-      {{feedbacks | safe}}
-    </div>
+      <div class="">
+          <div class="col-md-6">
+              <table class="table table-striped">
+                  <thead>
+                    <tr>
+                      <th>{{u.name}}'s Profile</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>Name</td>
+                      <td>{{u.nickname}}</td>
+                    </tr>
+                    <tr>
+                      <td>Graduation Year</td>
+                      <td>{{u.year}}</td>
+                    </tr>
+                    <tr>
+                      <td>Major</td>
+                      <td>{{u.major}}</td>
+                    </tr>
+                    {% if u.name == currentUsername: %}
+                    <tr>
+                      <td>Email</td>
+                      <td>{{u.email}}</td>
+                    </tr>
+                    {% endif %}
+                    <tr>
+                      <td>Tutor Rating</td>
+                      <td>{{u.tutorRating}}</td>
+                    </tr>
+                    <tr>
+                      <td>Number of Jobs as a Tutor</td>
+                      <td>{{u.numberTutorJobs}}</td>
+                    </tr>
+                    <tr>
+                      <td>Tutee Rating</td>
+                      <td>{{u.tuteeRating}}</td>
+                    </tr>
+                    <tr>
+                      <td>Number of Jobs as a Tutee</td>
+                      <td>{{u.numberTuteeJobs}}</td>
+                    </tr>
+                    <tr>
+                      <td>Description</td>
+                      <td>{{u.description}}</td>
+                    </tr>
+                  </tbody>
+              </table>
+          </div>
+      </div>
 
+      <div>
+        {{feedbacks | safe}}
+      </div>
 
     {% endblock %}

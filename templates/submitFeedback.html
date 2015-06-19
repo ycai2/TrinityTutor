@@ -10,12 +10,13 @@
     <li><a href="/connections">Connections</a></li>
     <li><a href="/users">Users</a></li>
   {% endif %}
+  <li><a href="/FAQ">FAQ</a></li>
 {% endblock %}
 
 {% block content %}
 
   <h2>Give Feedback</h2>
-    <a href="/afh/{{post.key().id()}}"> {{post.title}} </a>
+    <a href="/post/{{post.key().id()}}"> {{post.title}} </a>
 
     <form method="post" class="jumbotron">
 
@@ -30,6 +31,7 @@
             <option value="5">5</option>
          </select>
         </label>
+        <div>{{error_rating}}</div>
       </div>
 
       <div>

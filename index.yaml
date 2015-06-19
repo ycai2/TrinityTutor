@@ -12,8 +12,45 @@ indexes:
 
 - kind: Post
   properties:
+  - name: created
+    direction: desc
+  - name: difficulty
+    direction: desc
+
+- kind: Post
+  properties:
+  - name: created
+    direction: desc
+  - name: meetings
+    direction: desc
+
+- kind: Post
+  properties:
+  - name: created
+    direction: desc
+  - name: wage
+    direction: desc
+
+- kind: Post
+  properties:
   - name: subject
   - name: created
+    direction: desc
+
+- kind: Post
+  properties:
+  - name: subject
+  - name: created
+    direction: desc
+  - name: difficulty
+    direction: desc
+
+- kind: Post
+  properties:
+  - name: subject
+  - name: created
+    direction: desc
+  - name: wage
     direction: desc
 
 - kind: Post
@@ -32,4 +69,16 @@ indexes:
   properties:
   - name: subject
   - name: wage
+    direction: desc
+
+- kind: User
+  properties:
+  - name: email
+  - name: created
+    direction: desc
+
+- kind: User
+  properties:
+  - name: email_hash
+  - name: created
     direction: desc

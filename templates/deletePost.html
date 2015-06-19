@@ -9,9 +9,17 @@
     <li><a href="/connections">Connections</a></li>
     <li><a href="/users">Users</a></li>
   {% endif %}
-  <li><a href="/FAQ">FAQ</a></li>
+    <li><a href="/FAQ">FAQ</a></li>
 {% endblock %}
 
 {% block content %}
-  {{post.render_page(error_comment) | safe}}
+<div class="post">
+
+  <div> Hello {{owner.name}} </div>
+  <div>You are considering permanently deleting <a href="/post/{{post.key().id()}}">{{post.title}}</a></div>
+  <form method="post" class="jumbotron">
+    <input type="submit" name="confirm" class="btn btn-primary" value="Delete Your Post"></input>
+  </form>
+
+</div>
 {% endblock %}

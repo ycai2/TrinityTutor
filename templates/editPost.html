@@ -15,14 +15,14 @@
 
 {% block content %}
 
-  <h2>New Post</h2>
+  <h2>Edit Your Post: {{post.title}}</h2>
 
     <form method="post" class="jumbotron">
 
     <div>
       <label>
         <div>Title</div>
-        <input type="text" class="form-control" name="title" value="{{title}}" required autofocus>
+        <input type="text" class="form-control" name="title" value="{{post.title}}" required autofocus>
       </label>
     </div>
 
@@ -31,6 +31,7 @@
       <label>
         <div>Subject</div>
         <select name="subjectList">
+          <option value="{{post.subject}}">{{post.subject}}</option>
           <option value="American Studies">American Studies</option>
           <option value="Anthropology">Anthropology</option>
           <option value="Art History">Art History</option>
@@ -73,25 +74,24 @@
     <div>
       <label>
         <div>Wage (USD per hour): $</div>
-        <input type="number" min="0" max="200" class="form-control" name="wage" value="{{wage}}" required autofocus>
+        <input type="number" min="0" max="200" class="form-control" name="wage" value="{{post.wage}}" required autofocus>
       </label>
     </div>
 
     <div>
       <label>
-        <div>Meetings</div>
+        <div>Meetings (Note that this has been reset to "Once")</div>
         <select name="meetingsList">
           <option value="1">Once</option>
           <option value="2">Several</option>
           <option value="3">More...</option>
        </select>
       </label>
-      <div class="error">{{error_meetings}}</div>
     </div>
 
     <div>
       <label>
-        <div>Difficulty</div>
+        <div>Difficulty (Note that this has been reset to "Easy")</div>
         <select name="difficultyList">
           <option value="1">Easy</option>
           <option value="2">Medium</option>
@@ -99,13 +99,13 @@
           <option value="4">Very Hard</option>
        </select>
       </label>
-      <div class="error">{{error_difficulty}}</div>
     </div>
 
       <div>
         <b>Description</b>
         </div>
-      <textarea class="form-control" name="content" rows="10" placeholder="(HTML formatting available)">{{content}}</textarea>
+      <textarea class="form-control" name="content" rows="10" placeholder="(HTML formatting available)">{{post.content}}</textarea>
+      
       <div class="error">{{error}}</div>
       <br><br>
       <input type="submit" class="btn btn-primary">

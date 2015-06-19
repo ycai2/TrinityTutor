@@ -34,6 +34,8 @@
           <ul class="nav navbar-nav">
             <li><a href="/">Home</a></li>
             <li><a href="/newpost">New Post</a></li>
+            <li><a href="/FAQ">FAQ</a></li>
+            <li><a href="/signup">Signup</a></li>
           </ul>
         </div><!--/.nav-collapse -->
 
@@ -53,13 +55,15 @@
           <div id="form-error" class="form-group has-error has-feedback">
             <input type="password" name="password" value="" class="form-control" placeholder="Password" required autofocus>
             <span class="glyphicon glyphicon-remove form-control-feedback" aria-hidden="true"></span>
-            <label class="control-label">Username OR password invalid!</label>
+            <label class="control-label">{{error}}</label>
           </div>
         {% else %}
           <div class="form-group">
             <input type="text" name="username" value="{{username}}" class="form-control" placeholder="Username" required autofocus>
+            <div>Username is not case sensitive</div>
       
-            <input type="password" name="password" value="" class="form-control" placeholder="Password" required autofocus> 
+            <input type="password" name="password" value="" class="form-control" placeholder="Password" required autofocus>
+            <div>Password is case sensitive</div>
           </div>
         {% endif %}
         

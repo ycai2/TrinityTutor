@@ -1,0 +1,4 @@
+cron:
+- description: deleting old posts and users
+  url: /crontask
+  schedule: every 24 hours

@@ -5,8 +5,8 @@
   <div class="panel-body"> {{user.nickname}}'s email is {{user.email}}</div>
   <div class="panel-heading"> Connection made {{connection.created.strftime("%H:%M:%S, %b %d, %Y")}}</div>
   <div class="panel-body"> Post name: 
-    <a href="/afh/{{AFH.key().id()}}">
-      {{AFH.title | safe}}
+    <a href="/post/{{post.key().id()}}">
+      {{post.title | safe}}
     </a>
   </div>
 </div>

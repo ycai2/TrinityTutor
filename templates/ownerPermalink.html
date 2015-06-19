@@ -9,8 +9,9 @@
     <li><a href="/connections">Connections</a></li>
     <li><a href="/users">Users</a></li>
   {% endif %}
+  <li><a href="/FAQ">FAQ</a></li>
 {% endblock %}
 
 {% block content %}
-  {{post.render_ownerPage() | safe}}
+  {{post.render_ownerPage(error_comment) | safe}}
 {% endblock %}

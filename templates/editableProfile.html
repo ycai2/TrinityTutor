@@ -1,67 +1,25 @@
-<!DOCTYPE html>
+{% extends "base.html" %}
+  {% block navbar %}
+    <li><a href="/">Home</a></li>
+    <li><a href="/newpost">New Post</a></li>
+    <li class="active"><a href="/users/{{u.key().id()}}">Profile</a></li>
+    <li><a href="/created">Created</a></li>
+    <li><a href="/applied">Applied</a></li>
+    <li><a href="/connections">Connections</a></li>
+    <li><a href="/users">Users</a></li>
+    <li><a href="/FAQ">FAQ</a></li>
+  {% endblock %}
 
-<html>
-  <head>
-    <title>Sign Up</title>
-    <!-- Latest compiled and minified CSS -->
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.0/css/bootstrap.min.css">
-
-    <!-- Optional theme -->
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.0/css/bootstrap-theme.min.css">
-
-    <!-- Custom styles for this template -->
-    <link href="/static/signin.css" rel="stylesheet">
-
-    <!-- Latest compiled and minified JavaScript -->
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.0/js/bootstrap.min.js"></script>
-
-
-  </head>
-
-  <body>
-    <nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">
-      <div class="container">
-        <div class="navbar-header">
-          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
-            <span class="sr-only">Toggle navigation</span>
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-          </button>
-          <a class="navbar-brand" href="/">Trinity Tutor</a>
-        </div>
-        <div id="navbar" class="navbar-collapse collapse">
-          <ul class="nav navbar-nav">
-            <li><a href="/">Home</a></li>
-            <li><a href="/newpost">New Post</a></li>
-            <li><a href="/FAQ">FAQ</a></li>
-          </ul>
-        </div><!--/.nav-collapse -->
-
-      </div>
-    </nav>
-
+  {% block content %}
     <div class="container">
       <form method="post" class="form-signin">
-        <h2>Register</h2>
-        <div>
-          {% if error_username %}
-            <div id="form-error" class="form-group has-error has-feedback">
-              
-              <input type="text" name="username" value="{{username}}" class="form-control" placeholder="Username" required autofocus>
-              <span class="glyphicon glyphicon-remove form-control-feedback" aria-hidden="true"></span>
-              <label class="control-label">{{error_username}}</label>
-            </div>
-          {% else %}
-            <div class="form-group">
-              <input type="text" name="username" value="{{username}}" class="form-control" placeholder="Username" required autofocus>
-            </div>
-          {% endif %}
-          
+        <h2>Edit Profile of {{u.name}}</h2>
+        <hr><hr>
+        <div>Note that you must enter a new (possibly the same) password to change any information here</div>
 
+        <div>    
           {% if error_password %}
             <div id="form-error" class="form-group has-error has-feedback">
-              
               <input type="password" name="password" value="" class="form-control" placeholder="Password" required autofocus>
               <span class="glyphicon glyphicon-remove form-control-feedback" aria-hidden="true"></span>
               <label class="control-label">{{error_password}}</label>
@@ -73,8 +31,7 @@
           {% endif %}
           
           {% if error_verify %}
-            <div id="form-error" class="form-group has-error has-feedback">
-              
+            <div id="form-error" class="form-group has-error has-feedback">              
               <input type="password" name="verify" value="" class="form-control" placeholder="Confirm Password" required autofocus>
               <span class="glyphicon glyphicon-remove form-control-feedback" aria-hidden="true"></span>
               <label class="control-label">{{error_verify}}</label>
@@ -85,27 +42,9 @@
             </div>
           {% endif %}
 
-          {% if error_email %}
-            <div id="form-error" class="form-group has-error has-feedback">
-              <div class="input-group">
-                <input type="text" name="email" value="{{email}}" class="form-control" placeholder="FirstName.LastName" required autofocus>
-                <div class="input-group-addon">@trincoll.edu</div>
-              </div>
-              <span class="glyphicon form-control-feedback" aria-hidden="true"></span>
-              <label class="control-label">{{error_email}}</label>
-            </div>
-          {% else %}
-            <div class="form-group">
-              <div class="input-group">
-                <input type="text" name="email" value="{{email}}" class="form-control" placeholder="FirstName.LastName" required autofocus >
-                <div class="input-group-addon">@trincoll.edu</div>
-              </div>
-              <div>A verification email will be sent to your @trincoll.edu address. Please use the link in the email to confirm your account.</div>
-            </div>
-          {% endif %}
-
           <div class="form-group">
-            <input type="text" name="name" value="{{name}}" class="form-control" placeholder="Your Name" required autofocus>
+            <div>Name</div>
+            <input type="text" name="name" value="{{u.nickname}}" class="form-control" placeholder="{{u.nickname}}" required autofocus>
           </div>
 
           {% if error_year %}
@@ -113,6 +52,7 @@
               <div class="form-group">
               Class Year
               <select name="year" required autofocus>
+                <option value="{{u.year}}" selected>{{u.year}}</option>
                 <option value="2014">2014</option>
                 <option value="2015">2015</option>
                 <option value="2016">2016</option>
@@ -129,6 +69,7 @@
             <div class="form-group">
               Class Year
               <select name="year" required autofocus>
+                <option value="{{u.year}}" selected>{{u.year}}</option>
                 <option value="2014">2014</option>
                 <option value="2015">2015</option>
                 <option value="2016">2016</option>
@@ -143,6 +84,7 @@
           <div class="form-group">
             Major
             <select name="major" required>
+              <option value="{{u.major}}" selected >{{u.major}}</option>
               <option value="Undeclared">Undeclared</option>
               <option value="American Studies">American Studies</option>
               <option value="Anthropology">Anthropology</option>
@@ -182,8 +124,11 @@
             </select>
           </div>
 
+          <div>
+            Description
+          </div>
           <div class="form-group">
-            <textarea class="form-control" name="content" rows="10" placeholder="Description (Optional) (HTML formatting available)" autofocus></textarea>
+            <textarea class="form-control" name="description" rows="10" autofocus>{{u.description}}</textarea>
           </div>
 
         </div>
@@ -191,6 +136,4 @@
         <button class="btn btn-lg btn-primary btn-block" type="submit">Submit</button>
       </form>
     </div>
-  </body>
-
-</html>
+  {% endblock %}

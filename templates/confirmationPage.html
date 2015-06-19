@@ -3,13 +3,13 @@
   <li><a href="/">Home</a></li>
   <li><a href="/newpost">New Post</a></li>
   {% if user %}
-    <li><a href="/users/{{user.key().id()}}">Profile</a></li>
+    <li><a href="/myaccount">Profile</a></li>
     <li><a href="/created">Created</a></li>
     <li><a href="/applied">Applied</a></li>
     <li><a href="/connections">Connections</a></li>
     <li><a href="/users">Users</a></li>
   {% endif %}
-    <li><a href="/faq">F&ampQ</a> 
+    <li><a href="/FAQ">FAQ</a></li>
 {% endblock %}
 
 {% block content %}
@@ -18,13 +18,15 @@
 <div> Hello {{userName}} </div>
 {% if not userConfirmed: %}
 <form method="post" class="jumbotron">
-  <input type="submit" name="confirm" class="btn btn-primary" value="Verify your account"></input>
+  <div>The email address associated with this registration is {{userEmail}}.</div>
+  <div>If you are not trying to register "{{userName}}" or this is the incorrect email address, you must sign up again with the correct information.</div>
+  <input type="submit" name="confirm" class="btn btn-primary" value="Verify your account: {{userName}}"></input>
   <br><br>
 </form>
 {% endif %}
 {% if userConfirmed: %}
 <div class="jumbotron">
-  Your account has already been verified.
+  Your account "{{userName}}" has already been verified.
 </div>
 {% endif %}
 
