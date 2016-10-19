@@ -1,11 +1,10 @@
 Trinity Tutor
 =========
+A prototype of the Trinity Tutor Application using Python3, hosted on Google App Engine cloud service. <br>
 
 by: Yisheng Cai - <i>Trinity College, CT</i><br>
     Peter Reheis - <i>Trinity College, CT</i><br>
-    Steven Yee - <i>Trinity College, CT</i>
-
-A prototype of the Trinity Tutor Application using Python3, hosted on Google App Engine cloud service. <br>
+    Steven Yee - <i>Trinity College, CT</i><br>
 
 <b>Public Domain</b>: http://trinity-tutor.appspot.com<br>
 
