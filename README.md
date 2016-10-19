@@ -1,6 +1,7 @@
 Trinity Tutor
 =========
-A prototype of the Trinity Tutor Application using Python3, hosted on Google App Engine cloud service. <br>
+A webapp2 Application using Python3, hosted on Google App Engine cloud service. <br>
+This website is used for students to find and become tutors at Trinity College. <br>
 
 by: Yisheng Cai - <i>Trinity College, CT</i><br>
     Peter Reheis - <i>Trinity College, CT</i><br>
